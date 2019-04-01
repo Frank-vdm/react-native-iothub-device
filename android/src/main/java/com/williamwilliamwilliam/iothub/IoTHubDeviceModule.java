@@ -63,7 +63,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule  {
     public IoTHubDeviceModule(ReactApplicationContext reactContext) {
         super(reactContext);
         reactContext.addLifecycleEventListener(new IoTHubLifecycleEventListener());
-        onDesiredPropertyUpdate = new OnDesiredPropertyUpdate(getReactApplicationContext());
+        onDesiredPropertyUpdate = new OnDesiredPropertyUpdate(this, getReactApplicationContext());
     }
 
     @ReactMethod
