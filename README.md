@@ -1,4 +1,6 @@
 
+this is a fork of https://github.com/williamwilliamwilliam/react-native-iothub-device, with some changes and potential fixes, It is not fully tested and is not usable out of the box(yet) I am working on it as i actually need this functionality in a production environment
+
 # react-native-iothub-device
 
 Develop for mobile devices using Azure IoT SDKs:
@@ -38,7 +40,7 @@ android/build.gradle
 
 ##### Setup this library
 
-`$ npm install https://github.com/williamwilliamwilliam/react-native-iothub-device.git --save`
+`$ npm install https://github.com/Frank-vdm/react-native-iothub-device.git --save`
 
 android/build.gradle  
 ```
