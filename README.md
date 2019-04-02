@@ -1,5 +1,5 @@
 
-this is a fork of https://github.com/williamwilliamwilliam/react-native-iothub-device, with some changes and potential fixes, It is not fully tested and is not usable out of the box(yet) I am working on it as i actually need this functionality in a production environment
+this is a fork of https://github.com/williamwilliamwilliam/react-native-iothub-device, with some changes and potential fixes, It is not fully tested and is not usable out of the box(yet) I am working on it as i actually need this functionality in a production environment: the rest of the readme is as per the original, so not entirely accurate
 
 # react-native-iothub-device
 
