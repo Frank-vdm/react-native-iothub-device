@@ -95,6 +95,10 @@ const joinTheInterwebOfThings = async () =>{
     const onDeviceTwinStatusCallback = (iothubResponse) => {
         console.log(iothubResponse); // {responseStatus: "OK"}
     }
+    
+    const onEventCallback = (iothubResponse) => {
+    console.log(iothubResponse);
+}
 
     try{
         await connectToHub(
@@ -103,7 +107,8 @@ const joinTheInterwebOfThings = async () =>{
             onConnectionStatusChange,
             onDeviceTwinPropertyRetrieved,
             onMessageReceived,
-            onDeviceTwinStatusCallback);
+            onDeviceTwinStatusCallback
+            onEventCallback);
     }catch(error){
         console.error(error);
     }
@@ -127,6 +132,8 @@ joinTheInterwebOfThings();
 
 
 ### iOS Notes for ongoing development:
+
+IOS SIDE IS NOT DONE, ANY Contribution will be welcome, I wont have time to look at it at present
 
 ##### iOS Instructions
 $ gem install cocoapods  
