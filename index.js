@@ -6,9 +6,10 @@ export const {IoTHubDeviceModule} = NativeModules;
  * @param connectionString
  * @param desiredPropertySubscriptions
  * @param onDesiredPropertyUpdate
+ * @param onEventCallback
  * @returns {Promise}
  */
-export function connectToHub(connectionString, desiredPropertySubscriptions, onConnectionStatusChange, onDeviceTwinPropertyRetrieved, onMessageReceived, onDeviceTwinStatusCallback){
+export function connectToHub(connectionString, desiredPropertySubscriptions, onConnectionStatusChange, onDeviceTwinPropertyRetrieved, onMessageReceived, onDeviceTwinStatusCallback, onEventCallback){
     new NativeEventEmitter(IoTHubDeviceModule).addListener('onDesiredPropertyUpdate', (event) => {
         if(event.propertyJson){
             const property = JSON.parse(event.propertyJson);
@@ -42,6 +43,10 @@ export function connectToHub(connectionString, desiredPropertySubscriptions, onC
 
     new NativeEventEmitter(IoTHubDeviceModule).addListener('onMessageReceived', (event) => {
         onMessageReceived(event);
+    });
+
+    new NativeEventEmitter(IoTHubDeviceModule).addListener('onEventCallback', (event) => {
+        onEventCallback(event);
     });
 
     return IoTHubDeviceModule.connectToHub(connectionString, desiredPropertySubscriptions);
@@ -83,3 +88,39 @@ export function reportProperties(properties) {
 
     return NativeModules.IoTHubDeviceModule.sendReportedProperties(keyValueArray);
 }
+
+
+/**
+ * @param {Object[]} properties - Example input: {testValue:12345, testValue2:"12345", testValue3: true}
+   @param {Object} eventJson - Json object to send as a message
+ * @returns {Promise}
+ */
+export function sendMessage(properties, eventJson){
+    const keyValueArray = [];
+    Object.keys(properties).forEach(key => {
+        keyValueArray.push({
+            key,
+            value: properties[key]
+        });
+    });
+    message = JSON.stringify(eventJson);
+
+    return NativeModules.IoTHubDeviceModule.sendMessage(keyValueArray, message);
+}
+
+// /**
+//  * @param {Object[]} properties - Example input: {testValue:12345, testValue2:"12345", testValue3: true}
+//    @param {string} eventMessage - Json object to send as a message
+//  * @returns {Promise}
+//  */
+// export function sendMessage(properties, eventMessage) {
+//     const keyValueArray = [];
+//     Object.keys(properties).forEach(key => {
+//         keyValueArray.push({
+//             key,
+//             value: properties[key]
+//         });
+//     });
+
+//     return NativeModules.IoTHubDeviceModule.sendMessage(keyValueArray, eventMessage);
+// }
