@@ -33,6 +33,8 @@ import com.microsoft.azure.sdk.iot.device.exceptions.TransportException;
 import com.microsoft.azure.sdk.iot.device.transport.IotHubConnectionStatus;
 import com.microsoft.azure.sdk.iot.device.transport.RetryPolicy;
 
+//import org.codehaus.jackson.map.ObjectWriter;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
@@ -44,7 +46,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class IoTHubDeviceModule extends ReactContextBaseJavaModule  {
+public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
 
     private TwinPropertyCallBack onDesiredPropertyUpdate;
 
@@ -56,7 +58,8 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule  {
     }
 
     public EmitHelper emitHelper = new EmitHelper();
-    public ReactContext getReactContext(){
+
+    public ReactContext getReactContext() {
         return getReactApplicationContext();
     }
 
@@ -69,7 +72,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule  {
     @ReactMethod
     public void sendReportedProperties(ReadableArray array, Promise promise) {
         Set<Property> propertiesToSet = new LinkedHashSet<>();
-        for(int i = 0; i < array.size(); i++){
+        for (int i = 0; i < array.size(); i++) {
             ReadableMap map = array.getMap(i);
             String key = map.getString("key");
             Object value = getDynamicValue(map, "value");
@@ -77,14 +80,15 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule  {
         }
         try {
             client.sendReportedProperties(propertiesToSet);
-            if(promise != null){
+            if (promise != null) {
                 promise.resolve(true);
             }
         } catch (IOException e) {
             Log.e(this.getClass().getSimpleName(), e.getMessage(), e);
-            if(promise != null){
+            if (promise != null) {
                 promise.reject(e);
-            };
+            }
+            ;
         }
     }
 
@@ -93,41 +97,42 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule  {
         try {
             Property property = new Property(input.getString("key"), getDynamicValue(input, "value"));
             client.sendReportedProperties(Sets.newHashSet(property));
-            if(success != null){
+            if (success != null) {
                 success.invoke();
             }
         } catch (IOException e) {
             Log.e(this.getClass().getSimpleName(), e.getMessage(), e);
-            if(failure != null){
+            if (failure != null) {
                 failure.invoke(e.getMessage());
             }
         }
     }
 
     private Object getDynamicValue(ReadableMap input, String key) {
-        if(input.getType(key) == ReadableType.String){
+        if (input.getType(key) == ReadableType.String) {
             return input.getString(key);
-        } else if(input.getType(key) == ReadableType.Boolean){
+        } else if (input.getType(key) == ReadableType.Boolean) {
             return input.getBoolean(key);
-        } else if(input.getType(key) == ReadableType.Number){
+        } else if (input.getType(key) == ReadableType.Number) {
             return input.getDouble(key);
-        } else{
+        } else {
             return input.getString(key);
         }
     }
 
-    private IotHubEventCallback onDeviceTwinStatusCallback(){
+    private IotHubEventCallback onDeviceTwinStatusCallback() {
         return new IotHubEventCallback() {
             @Override
             public void execute(IotHubStatusCode responseStatus, Object callbackContext) {
-                Log.d(this.getClass().getSimpleName(), "onDeviceTwinStatusCallback: "+responseStatus);
+                Log.d(this.getClass().getSimpleName(), "onDeviceTwinStatusCallback: " + responseStatus);
                 WritableMap params = Arguments.createMap();
                 params.putString("responseStatus", responseStatus.name());
                 emitHelper.emit(getReactContext(), "onDeviceTwinStatusCallback", params);
             }
         };
     }
-    private TwinPropertyCallBack onDeviceTwinPropertyRetrieved(){
+
+    private TwinPropertyCallBack onDeviceTwinPropertyRetrieved() {
         return new TwinPropertyCallBack() {
             @Override
             public void TwinPropertyCallBack(Property property, Object context) {
@@ -146,6 +151,16 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule  {
     boolean initialized = false;
     long retryAfter = 1000;
     long retryMultiplier = 2;
+
+
+    private String msgStr;
+    private Message sendMessage;
+    private int msgSentCount = 0;
+    private int receiptsConfirmedCount = 0;
+    private int sendFailuresCount = 0;
+    private int msgReceivedCount = 0;
+    private int sendMessagesInterval = 5000;
+
     @ReactMethod
     public void connectToHub(String connectionString, ReadableArray desiredPropertySubscriptions, Promise promise) {
         try {
@@ -153,31 +168,30 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule  {
             client = new DeviceClient(connectionString, IotHubClientProtocol.AMQPS_WS);
             setConnectionStatusChangeCallback();
             boolean isConnectionOpened = false;
-            while(!isConnectionOpened){
-                try{
+            while (!isConnectionOpened) {
+                try {
                     client.open();
                     isConnectionOpened = true;
-                }catch(Exception e){
-                    if(StringUtils.containsIgnoreCase(ExceptionUtils.getRootCauseMessage(e), "TransportException: Timed out waiting to connect to service")){
-                        Log.w(this.getClass().getSimpleName(), ExceptionUtils.getRootCauseMessage(e)+". Reconnecting in "+(retryAfter/1000)+" seconds.");
+                } catch (Exception e) {
+                    if (StringUtils.containsIgnoreCase(ExceptionUtils.getRootCauseMessage(e),
+                            "TransportException: Timed out waiting to connect to service")) {
+                        Log.w(this.getClass().getSimpleName(), ExceptionUtils.getRootCauseMessage(e)
+                                + ". Reconnecting in " + (retryAfter / 1000) + " seconds.");
                         SystemClock.sleep(retryAfter);
-                        retryAfter = retryAfter* retryMultiplier;
-                    }else{
+                        retryAfter = retryAfter * retryMultiplier;
+                    } else {
                         throw e;
                     }
                 }
             }
 
-            client.startDeviceTwin(onDeviceTwinStatusCallback,
-                    null,
-                    twinPropertyCallBack,
-                    null);
+            client.startDeviceTwin(onDeviceTwinStatusCallback, null, twinPropertyCallBack, null);
             client.setMessageCallback(onMessageCallback, null);
             subscribeToDesiredProperties(desiredPropertySubscriptions);
             initialized = true;
             promise.resolve("Successfully connected!");
-        } catch (Exception e){
-            String message = "There was a problem connecting to IoT Hub. "+e.getMessage();
+        } catch (Exception e) {
+            String message = "There was a problem connecting to IoT Hub. " + e.getMessage();
             Log.e(this.getClass().getSimpleName(), message, e);
             promise.reject(this.getClass().getSimpleName(), e);
         }
@@ -201,8 +215,9 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule  {
     private void setConnectionStatusChangeCallback() {
         client.registerConnectionStatusChangeCallback(new IotHubConnectionStatusChangeCallback() {
             @Override
-            public void execute(IotHubConnectionStatus status, IotHubConnectionStatusChangeReason statusChangeReason, Throwable throwable, Object callbackContext) {
-                Log.d(this.getClass().getSimpleName(), "status: "+status+" reason: "+statusChangeReason);
+            public void execute(IotHubConnectionStatus status, IotHubConnectionStatusChangeReason statusChangeReason,
+                    Throwable throwable, Object callbackContext) {
+                Log.d(this.getClass().getSimpleName(), "status: " + status + " reason: " + statusChangeReason);
                 WritableMap params = Arguments.createMap();
                 params.putString("status", status.name());
                 params.putString("statusChangeReason", statusChangeReason.name());
@@ -212,22 +227,82 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule  {
     }
 
     private void subscribeToDesiredProperties(ReadableArray desiredPropertySubscriptions) throws IOException {
-        if(desiredPropertySubscriptions == null || desiredPropertySubscriptions.size() == 0){
+        if (desiredPropertySubscriptions == null || desiredPropertySubscriptions.size() == 0) {
             return;
         }
         Map<Property, Pair<TwinPropertyCallBack, Object>> subscriptions = new HashMap<>();
-        for(int i = 0; i < desiredPropertySubscriptions.size(); i++){
-            subscriptions.put(new Property(desiredPropertySubscriptions.getString(i), null), new Pair<TwinPropertyCallBack, Object>(onDesiredPropertyUpdate, null));
+        for (int i = 0; i < desiredPropertySubscriptions.size(); i++) {
+            subscriptions.put(new Property(desiredPropertySubscriptions.getString(i), null),
+                    new Pair<TwinPropertyCallBack, Object>(onDesiredPropertyUpdate, null));
         }
-        if(!subscriptions.isEmpty()){
+        if (!subscriptions.isEmpty()) {
             client.subscribeToTwinDesiredProperties(subscriptions);
         }
     }
-
 
     @Override
     public Map<String, Object> getConstants() {
         final Map<String, Object> constants = new HashMap<>();
         return constants;
     }
+
+    /// NEW METHODS IMPLEMENTED BY FRANCOIS VAN DER MERWE
+
+    @ReactMethod
+    public void sendMessage(ReadableArray properties, String eventMessage) {
+
+        try {
+            sendMessage = new Message(eventMessage);
+
+            // set properties
+            for (int i = 0; i < properties.size(); i++) {
+                ReadableMap map = properties.getMap(i);
+                String key = map.getString("key");
+                Object value = getDynamicValue(map, "value");
+                sendMessage.setProperty(key, value.toString());
+            }
+
+            sendMessage.setMessageId(java.util.UUID.randomUUID().toString());
+            Log.d(this.getClass().getSimpleName(), "Message Sent: " + msgStr);
+
+            EventCallback eventCallback = new EventCallback();
+            client.sendEventAsync(sendMessage, eventCallback, msgSentCount);
+            msgSentCount++;
+            //handler.post(updateRunnable);
+        } catch (Exception e) {
+            
+            Log.e(this.getClass().getSimpleName(),"Exception while sending event: " + e);
+            throw e;
+        }
+    }
+
+class EventCallback implements IotHubEventCallback{
+     public void execute(IotHubStatusCode status, Object context)
+        {
+            Integer i = context instanceof Integer ? (Integer) context : 0;
+            Log.d(this.getClass().getSimpleName(), "IoT Hub responded to message " + i.toString() + " with status " + status.name());
+
+            // ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
+            // String statusJson = ow.writeValueAsString(status);
+            String statusJson = status.toString();
+
+            if((status == IotHubStatusCode.OK) || (status == IotHubStatusCode.OK_EMPTY))
+            {
+                receiptsConfirmedCount++;
+                WritableMap params = Arguments.createMap();
+                params.putString("status", statusJson);
+                params.putString("receiptsConfirmedCount", Integer.toString(receiptsConfirmedCount));
+                emitHelper.emit(getReactContext(), "onEventCallback", params);
+            }
+            else
+            {
+                sendFailuresCount++;
+                WritableMap params = Arguments.createMap();
+                params.putString("status", statusJson);
+                params.putString("sendFailuresCount", Integer.toString(sendFailuresCount));
+                emitHelper.emit(getReactContext(), "onEventCallback", params);
+            }
+        }
+    }
 }
+
