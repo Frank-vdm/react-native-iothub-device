@@ -58,7 +58,7 @@ project(':react-native-iothub-device').projectDir = new File(settingsDir, '../no
 
 Add to your MainApplication.java  
 ```
-import com.williamwilliamwilliam.iothub.IoTHubDevicePackage;
+import com.frank_vdm.iothub.IoTHubDevicePackage;
 ...
     @Override
     protected List<ReactPackage> getPackages() {
