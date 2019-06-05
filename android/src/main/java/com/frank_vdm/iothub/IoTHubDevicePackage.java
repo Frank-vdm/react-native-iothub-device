@@ -1,4 +1,4 @@
-package com.williamwilliamwilliam.iothub;
+package com.frank_vdm.iothub;
 
 import com.facebook.react.ReactPackage;
 import com.facebook.react.bridge.JavaScriptModule;

@@ -1,4 +1,4 @@
-package com.williamwilliamwilliam.iothub;
+package com.frank_vdm.iothub;
 
 import android.support.annotation.Nullable;
 

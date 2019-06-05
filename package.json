@@ -1,6 +1,6 @@
 {
   "name": "react-native-iothub-device",
-  "author": "WilliamWilliamWilliam",
+  "author": "frank_vdm",
   "version": "1.1.0",
   "description": "",
   "scripts": {
@@ -9,7 +9,6 @@
   "keywords": [
     "react-native", "azure", "iot hub"
   ],
-  "author": "",
   "license": "",
   "peerDependencies": {
   }
