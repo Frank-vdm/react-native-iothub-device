@@ -164,36 +164,46 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void connectToHub(String connectionString, ReadableArray desiredPropertySubscriptions, Promise promise) {
         try {
+            Thread t = new Thread(new Runnable()) {
+                @override
+                public void run() {
 
-            client = new DeviceClient(connectionString, IotHubClientProtocol.AMQPS_WS);
-            setConnectionStatusChangeCallback();
-            boolean isConnectionOpened = false;
-            while (!isConnectionOpened) {
-                try {
-                    client.open();
-                    isConnectionOpened = true;
-                } catch (Exception e) {
-                    if (StringUtils.containsIgnoreCase(ExceptionUtils.getRootCauseMessage(e),
-                            "TransportException: Timed out waiting to connect to service")) {
-                        Log.w(this.getClass().getSimpleName(), ExceptionUtils.getRootCauseMessage(e)
-                                + ". Reconnecting in " + (retryAfter / 1000) + " seconds.");
-                        SystemClock.sleep(retryAfter);
-                        retryAfter = retryAfter * retryMultiplier;
-                    } else {
-                        throw e;
+
+                    client = new DeviceClient(connectionString, IotHubClientProtocol.AMQPS_WS);
+                    setConnectionStatusChangeCallback();
+                    boolean isConnectionOpened = false;
+                    while (!isConnectionOpened) {
+                        try {
+                            client.open();
+                            isConnectionOpened = true;
+                        } catch (Exception e) {
+                            if (StringUtils.containsIgnoreCase(ExceptionUtils.getRootCauseMessage(e),
+                                    "TransportException: Timed out waiting to connect to service")) {
+                                Log.w(this.getClass().getSimpleName(), ExceptionUtils.getRootCauseMessage(e)
+                                        + ". Reconnecting in " + (retryAfter / 1000) + " seconds.");
+                                SystemClock.sleep(retryAfter);
+                                retryAfter = retryAfter * retryMultiplier;
+                            } else {
+                                throw e;
+                            }
+                        }
                     }
+
+                    client.startDeviceTwin(onDeviceTwinStatusCallback, null, twinPropertyCallBack, null);
+                    client.setMessageCallback(onMessageCallback, null);
+                    subscribeToDesiredProperties(desiredPropertySubscriptions);
+                    initialized = true;
+                    promise.resolve("Successfully connected!");
+                } catch(
+                Exception e)
+
+                {
+                    String message = "There was a problem connecting to IoT Hub. " + e.getMessage();
+                    Log.e(this.getClass().getSimpleName(), message, e);
+                    promise.reject(this.getClass().getSimpleName(), e);
                 }
             }
 
-            client.startDeviceTwin(onDeviceTwinStatusCallback, null, twinPropertyCallBack, null);
-            client.setMessageCallback(onMessageCallback, null);
-            subscribeToDesiredProperties(desiredPropertySubscriptions);
-            initialized = true;
-            promise.resolve("Successfully connected!");
-        } catch (Exception e) {
-            String message = "There was a problem connecting to IoT Hub. " + e.getMessage();
-            Log.e(this.getClass().getSimpleName(), message, e);
-            promise.reject(this.getClass().getSimpleName(), e);
         }
     }
 
