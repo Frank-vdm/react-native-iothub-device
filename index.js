@@ -7,9 +7,10 @@ export const {IoTHubDeviceModule} = NativeModules;
  * @param desiredPropertySubscriptions
  * @param onDesiredPropertyUpdate
  * @param onEventCallback
+ * @param shouldRetry
  * @returns {Promise}
  */
-export function connectToHub(connectionString, desiredPropertySubscriptions, onConnectionStatusChange, onDeviceTwinPropertyRetrieved, onMessageReceived, onDeviceTwinStatusCallback, onEventCallback){
+export async function connectToHub(connectionString, desiredPropertySubscriptions, onConnectionStatusChange, onDeviceTwinPropertyRetrieved, onMessageReceived, onDeviceTwinStatusCallback, onEventCallback, shouldRetry = true){
     new NativeEventEmitter(IoTHubDeviceModule).addListener('onDesiredPropertyUpdate', (event) => {
         if(event.propertyJson){
             const property = JSON.parse(event.propertyJson);
@@ -49,7 +50,7 @@ export function connectToHub(connectionString, desiredPropertySubscriptions, onC
         onEventCallback(event);
     });
 
-    return IoTHubDeviceModule.connectToHub(connectionString, desiredPropertySubscriptions);
+    return IoTHubDeviceModule.connectToHub(connectionString, desiredPropertySubscriptions, shouldRetry);
 }
 
 export async function requestTwinProperties(){
