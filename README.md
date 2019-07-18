@@ -108,7 +108,8 @@ const joinTheInterwebOfThings = async () =>{
             onDeviceTwinPropertyRetrieved,
             onMessageReceived,
             onDeviceTwinStatusCallback
-            onEventCallback);
+            onEventCallback,
+            shoudRetry = true);
     }catch(error){
         console.error(error);
     }
