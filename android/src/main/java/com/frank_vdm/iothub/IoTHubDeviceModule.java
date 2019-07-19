@@ -142,10 +142,6 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
         };
     }
 
-
-    //
-
-
     ////--------------------------------------------------------------------------------------------------------------------////
 ////-------------------------------------------- ORIGINAL CONNECTION METHOD START---------------------------------------////
 ////--------------------------------------------------------------------------------------------------------------------////
@@ -207,20 +203,20 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     private boolean twinIsStarted = false;
     private boolean messageCallbackIsSet = false;
     private boolean isSubscribeToDesiredProperties = false;
-    // private boolean isSubscribeToDesiredProperties = false;
-    // private boolean isSubscribeToDesiredProperties = false;
 
 
     private void InitIotHubClient(String connectionString, Promise promise) {
         try {
-            // if (client != null) {
-            client = new DeviceClient(connectionString, IotHubClientProtocol.AMQPS_WS);
-            // }
+            if (client == null) {
+                client = new DeviceClient(connectionString, IotHubClientProtocol.AMQPS_WS);
+            }
         } catch (URISyntaxException uriSyntaxException) {
+            client = null;
             String message = "The connection string is Malformed. " + uriSyntaxException.getMessage();
             Log.e(this.getClass().getSimpleName(), message, uriSyntaxException);
             promise.reject(this.getClass().getSimpleName(), uriSyntaxException);
         } catch (Exception e) {
+            client = null;
             String message = "There was a problem initiating the IOT hub Device Client. " + e.getMessage();
             Log.e(this.getClass().getSimpleName(), message, e);
             promise.reject(this.getClass().getSimpleName(), e);
@@ -303,51 +299,16 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void connectToHub(String connectionString, ReadableArray desiredPropertySubscriptions, Boolean shouldRetry, Promise promise) {
-        //THREADING SECTION
-
         Thread connection = new Thread(new ConnectionRunnable(connectionString, desiredPropertySubscriptions, shouldRetry, promise));
         connection.start();
-//        Thread t = new Thread(new Runnable() {
-//            @Override
-//            public void run() {
-//
-//                //THREADING SECTION
-//                try {
-//                    InitIotHubClient(connectionString, promise);
-//                    setConnectionStatusChangeCallback();
-//                    Connect(promise);
-//                    StartIotDeviceTwin(promise);
-//                    SetMessageCallBack(promise);
-//                    SubscribeToDesiredProperties(desiredPropertySubscriptions, promise);
-//                    initialized = true;
-//                    promise.resolve("Successfully connected!");
-//                } catch (Exception e) {
-//                    if (isConnectionOpened) {
-//                        CloseClient(promise);
-//                    }
-//                    isConnectionOpened = false;
-//                    twinIsStarted = false;
-//                    messageCallbackIsSet = false;
-//                    isSubscribeToDesiredProperties = false;
-//                    initialized = false;
-//                    String message = "There was a problem connecting to the bug, but this should never be called. " + e.getMessage();
-//                    Log.e(this.getClass().getSimpleName(), message, e);
-//                    promise.reject(this.getClass().getSimpleName(), e);
-//                }
-//                //THREADING SECTION
-//
-//            }
-//        });
-//        t.start();
-
-        //THREADING SECTION
     }
-
 
     private void CloseClient(Promise promise) {
         try {
-            client.closeNow();
-            isConnectionOpened = false;
+            if (client != null) {
+                client.closeNow();
+                isConnectionOpened = false;
+            }
         } catch (IOException ioException) {
             String message = "cannot close client. " + ioException.getMessage();
             Log.e(this.getClass().getSimpleName(), message, ioException);
@@ -357,8 +318,12 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
 
     private void OpenClient(Promise promise) {
         try {
-            client.open();
-            isConnectionOpened = true;
+            if (client != null) {
+                client.open();
+                isConnectionOpened = true;
+            } else {
+                promise.reject(this.getClass().getSimpleName(), "IOT hub Client is not initialized");
+            }
         } catch (IOException ioException) {
             String message = "cannot open client connection " + ioException.getMessage();
             Log.e(this.getClass().getSimpleName(), message, ioException);
@@ -366,9 +331,8 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
         }
     }
 
+
     class ConnectionRunnable implements Runnable {
-
-
         String _connectionString;
         ReadableArray _desiredPropertySubscriptions;
         Boolean _shouldRetry;
@@ -482,6 +446,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void sendMessage(ReadableArray properties, String eventMessage, Promise promise) {
         try {
+            OpenClient(promise);
             if (isConnectionOpened) {
                 CreateMessageToSend(properties, eventMessage);
                 EventCallback eventCallback = new EventCallback();
