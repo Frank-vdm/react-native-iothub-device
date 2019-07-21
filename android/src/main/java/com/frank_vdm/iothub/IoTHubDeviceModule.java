@@ -63,7 +63,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
 
     public IoTHubDeviceModule(ReactApplicationContext reactContext) {
         super(reactContext);
-        reactContext.addLifecycleEventListener(new IoTHubLifecycleEventListener());
+        reactContext.addLifecycleEventListener(new IoTHubLifecycleEventListener(this));
         onDesiredPropertyUpdate = new OnDesiredPropertyUpdate(this, getReactApplicationContext());
     }
 
@@ -303,7 +303,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
         connection.start();
     }
 
-    private void CloseClient(Promise promise) {
+    public void CloseClient(Promise promise) {
         try {
             if (client != null) {
                 client.closeNow();
@@ -316,7 +316,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
         }
     }
 
-    private void OpenClient(Promise promise) {
+    public void OpenClient(Promise promise) {
         try {
             if (client != null) {
                 client.open();
@@ -456,10 +456,10 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
                 promise.resolve("Event Message sent Successfully!");
             }
         } catch (Exception e) {
-            if (StringUtils.containsIgnoreCase(ExceptionUtils.getRootCauseMessage(e), "connections is closed")) {
-                OpenClient(promise);
-                sendMessage(properties, eventMessage, promise);
-            } else {
+//            if (StringUtils.containsIgnoreCase(ExceptionUtils.getRootCauseMessage(e), "connections is closed")) {
+//                OpenClient(promise);
+//                sendMessage(properties, eventMessage, promise);
+//            } else {
                 String message = "There was a problem sending Event Message. " + e.getMessage();
                 Log.e(this.getClass().getSimpleName(), message, e);
                 promise.reject(this.getClass().getSimpleName(), e);
@@ -503,6 +503,31 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
                 emitHelper.emit(getReactContext(), "onEventCallback", params);
             }
         }
+    }
+
+    private boolean isAppIsInBackground(Context context) {
+        boolean isInBackground = true;
+        ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT_WATCH) {
+            List<ActivityManager.RunningAppProcessInfo> runningProcesses = am.getRunningAppProcesses();
+            for (ActivityManager.RunningAppProcessInfo processInfo : runningProcesses) {
+                if (processInfo.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND) {
+                    for (String activeProcess : processInfo.pkgList) {
+                        if (activeProcess.equals(context.getPackageName())) {
+                            isInBackground = false;
+                        }
+                    }
+                }
+            }
+        } else {
+            List<ActivityManager.RunningTaskInfo> taskInfo = am.getRunningTasks(1);
+            ComponentName componentInfo = taskInfo.get(0).topActivity;
+            if (componentInfo.getPackageName().equals(context.getPackageName())) {
+                isInBackground = false;
+            }
+        }
+
+        return isInBackground;
     }
 /// NEW METHODS IMPLEMENTED BY FRANCOIS VAN DER MERWE[END]
 ////--------------------------------------------------------------------------------------------------------------------////
