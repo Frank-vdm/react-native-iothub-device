@@ -63,7 +63,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
 
     public IoTHubDeviceModule(ReactApplicationContext reactContext) {
         super(reactContext);
-        reactContext.addLifecycleEventListener(new IoTHubLifecycleEventListener(this));
+
         onDesiredPropertyUpdate = new OnDesiredPropertyUpdate(this, getReactApplicationContext());
     }
 
@@ -299,6 +299,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void connectToHub(String connectionString, ReadableArray desiredPropertySubscriptions, Boolean shouldRetry, Promise promise) {
+        getReactApplicationContext().addLifecycleEventListener(new IoTHubLifecycleEventListener(this, promise));
         Thread connection = new Thread(new ConnectionRunnable(connectionString, desiredPropertySubscriptions, shouldRetry, promise));
         connection.start();
     }
@@ -464,6 +465,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
             Log.e(this.getClass().getSimpleName(), message, e);
             promise.reject(this.getClass().getSimpleName(), e);
         }
+        //}
     }
 
     private void CreateMessageToSend(ReadableArray properties, String eventMessage) {
@@ -502,33 +504,32 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
                 emitHelper.emit(getReactContext(), "onEventCallback", params);
             }
         }
-
     }
 
-    private boolean isAppIsInBackground(Context context) {
-        boolean isInBackground = true;
-        ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT_WATCH) {
-            List<ActivityManager.RunningAppProcessInfo> runningProcesses = am.getRunningAppProcesses();
-            for (ActivityManager.RunningAppProcessInfo processInfo : runningProcesses) {
-                if (processInfo.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND) {
-                    for (String activeProcess : processInfo.pkgList) {
-                        if (activeProcess.equals(context.getPackageName())) {
-                            isInBackground = false;
-                        }
-                    }
-                }
-            }
-        } else {
-            List<ActivityManager.RunningTaskInfo> taskInfo = am.getRunningTasks(1);
-            ComponentName componentInfo = taskInfo.get(0).topActivity;
-            if (componentInfo.getPackageName().equals(context.getPackageName())) {
-                isInBackground = false;
-            }
-        }
-
-        return isInBackground;
-    }
+//    private boolean isAppIsInBackground(Context context) {
+//        boolean isInBackground = true;
+//        ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+//        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT_WATCH) {
+//            List<ActivityManager.RunningAppProcessInfo> runningProcesses = am.getRunningAppProcesses();
+//            for (ActivityManager.RunningAppProcessInfo processInfo : runningProcesses) {
+//                if (processInfo.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND) {
+//                    for (String activeProcess : processInfo.pkgList) {
+//                        if (activeProcess.equals(context.getPackageName())) {
+//                            isInBackground = false;
+//                        }
+//                    }
+//                }
+//            }
+//        } else {
+//            List<ActivityManager.RunningTaskInfo> taskInfo = am.getRunningTasks(1);
+//            ComponentName componentInfo = taskInfo.get(0).topActivity;
+//            if (componentInfo.getPackageName().equals(context.getPackageName())) {
+//                isInBackground = false;
+//            }
+//        }
+//
+//        return isInBackground;
+//    }
 /// NEW METHODS IMPLEMENTED BY FRANCOIS VAN DER MERWE[END]
 ////--------------------------------------------------------------------------------------------------------------------////
 }
