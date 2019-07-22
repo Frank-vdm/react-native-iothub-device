@@ -142,70 +142,95 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
         };
     }
 
-    ////--------------------------------------------------------------------------------------------------------------------////
-////-------------------------------------------- ORIGINAL CONNECTION METHOD START---------------------------------------////
+    private MessageCallback onMessageCallback() {
+        return new MessageCallback() {
+            @Override
+            public IotHubMessageResult execute(Message message, Object callbackContext) {
+                String messageString = new String(message.getBytes(), Message.DEFAULT_IOTHUB_MESSAGE_CHARSET);
+                Log.d(this.getClass().getSimpleName(), messageString);
+                WritableMap params = Arguments.createMap();
+                params.putString("message", messageString);
+                params.putString("messageId", message.getMessageId());
+                emitHelper.emit(getReactContext(), "onMessageReceived", params);
+                return IotHubMessageResult.COMPLETE;
+            }
+        };
+    }
+
+
+    ////----------------------------------------------------------------------------------------------------------------////
+////--------------------------------------- (STABLE VERSION) IOT HUB CONNECTION ----------------------------------------////
+////--------------------------------------------------------------------------------------------------------------------////
+    @ReactMethod
+    public void connectToHub(String connectionString, ReadableArray desiredPropertySubscriptions, Boolean shouldRetry, Promise promise) {
+        Thread connection = new Thread(new ConnectionRunnable(connectionString, desiredPropertySubscriptions, shouldRetry, promise));
+        connection.start();
+    }
+
+
+    ////----------------------------------------------------------------------------------------------------------------////
+////------------------------------------------- (Runnable) Connection Client  ------------------------------------------////
+////--------------------------------------------------------------------------------------------------------------------////
+
+    class ConnectionRunnable implements Runnable {
+        String _connectionString;
+        ReadableArray _desiredPropertySubscriptions;
+        Boolean _shouldRetry;
+        Promise _promise;
+
+        public ConnectionRunnable(String connectionString, ReadableArray desiredPropertySubscriptions, Boolean shouldRetry, Promise promise) {
+            _connectionString = connectionString;
+            _desiredPropertySubscriptions = desiredPropertySubscriptions;
+            _shouldRetry = shouldRetry;
+            _promise = promise;
+        }
+
+        public void run() {
+            try {
+                InitializeIotHubClient(_connectionString, _promise);
+                AddLifeCycleListerner(_promise);
+                setConnectionStatusChangeCallback();
+                OpenConnection(_shouldRetry, _promise);
+                StartIotDeviceTwin(_promise);
+                SetMessageCallBack(_promise);
+                SubscribeToDesiredProperties(_desiredPropertySubscriptions, _promise);
+                initialized = true;
+                _promise.resolve("Successfully connected!");
+            } catch (Exception e) {
+                if (client != null) {
+                    CloseClient(_promise);
+                }
+                twinIsStarted = false;
+                messageCallbackIsSet = false;
+                isSubscribeToDesiredProperties = false;
+                initialized = false;
+                String message = "There was a problem connecting to the hub, but this should never be called. " + e.getMessage();
+                Log.e(this.getClass().getSimpleName(), message, e);
+                _promise.reject(this.getClass().getSimpleName(), e);
+            }
+        }
+    }
+
+    ////----------------------------------------------------------------------------------------------------------------////
+////-------------------------------------------- IOT HUB CONNECTION PROCESS --------------------------------------------////
 ////--------------------------------------------------------------------------------------------------------------------////
     DeviceClient client;
     IotHubEventCallback onDeviceTwinStatusCallback = onDeviceTwinStatusCallback();
     TwinPropertyCallBack twinPropertyCallBack = onDeviceTwinPropertyRetrieved();
     MessageCallback onMessageCallback = onMessageCallback();
-    boolean initialized = false;
+
     long retryAfter = 1000;
     long retryMultiplier = 2;
 
-    private boolean isConnectionOpened = false;
-
-//    @ReactMethod
-//    public void connectToHub(String connectionString, ReadableArray desiredPropertySubscriptions, Promise promise) {
-//        try {
-//
-//            client = new DeviceClient(connectionString, IotHubClientProtocol.AMQPS_WS);
-//            setConnectionStatusChangeCallback();
-//            boolean isConnectionOpened = false;
-//            while (!isConnectionOpened) {
-//                try {
-//                    client.open();
-//                    isConnectionOpened = true;
-//                } catch (Exception e) {
-//                    if (StringUtils.containsIgnoreCase(ExceptionUtils.getRootCauseMessage(e), "TransportException: Timed out waiting to connect to service")) {
-//                        Log.w(this.getClass().getSimpleName(), ExceptionUtils.getRootCauseMessage(e) + ". Reconnecting in " + (retryAfter / 1000) + " seconds.");
-//                        SystemClock.sleep(retryAfter);
-//                        retryAfter = retryAfter * retryMultiplier;
-//                    } else {
-//                        throw e;
-//                    }
-//                }
-//            }
-//
-//            client.startDeviceTwin(onDeviceTwinStatusCallback,
-//                    null,
-//                    twinPropertyCallBack,
-//                    null);
-//            client.setMessageCallback(onMessageCallback, null);
-//            subscribeToDesiredProperties(desiredPropertySubscriptions);
-//            initialized = true;
-//            promise.resolve("Successfully connected!");
-//        } catch (Exception e) {
-//            String message = "There was a problem connecting to IoT Hub. " + e.getMessage();
-//            Log.e(this.getClass().getSimpleName(), message, e);
-//            promise.reject(this.getClass().getSimpleName(), e);
-//        }
-//    }
-////--------------------------------------------------------------------------------------------------------------------////
-////-------------------------------------------- ORIGINAL CONNECTION METHOD END ----------------------------------------////
-////--------------------------------------------------------------------------------------------------------------------////
-
-
-    ////--------------------------------------------------------------------------------------------------------------------////
-////-------------------------------------------- NEW CONNECTION METHOD START -------------------------------------------////
-////--------------------------------------------------------------------------------------------------------------------////
-
+    private boolean initialized = false;
+    private boolean connectionStatusChangeCallbackIsSet = false;
     private boolean twinIsStarted = false;
     private boolean messageCallbackIsSet = false;
     private boolean isSubscribeToDesiredProperties = false;
 
+    private static final String CLIENT_NULL = "IOT Hub Client Not Initialized.";
 
-    private void InitIotHubClient(String connectionString, Promise promise) {
+    private void InitializeIotHubClient(String connectionString, Promise promise) {
         try {
             if (client == null) {
                 client = new DeviceClient(connectionString, IotHubClientProtocol.AMQPS_WS);
@@ -223,13 +248,37 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
         }
     }
 
-    private void Connect(Boolean shouldRetry, Promise promise) {
+    private void AddLifeCycleListerner(Promise promise) {
+        if (client != null) {
+            getReactApplicationContext().addLifecycleEventListener(new IoTHubLifecycleEventListener(this, promise));
+        } else {
+            String message = CLIENT_NULL + ", Call 'connectToHub' first, before trying to user the client";
+            Log.e(this.getClass().getSimpleName(), message);
+            promise.reject(this.getClass().getSimpleName(), message);
+        }
+    }
+
+    private void setConnectionStatusChangeCallback() {
+        if (client != null && !connectionStatusChangeCallbackIsSet) {
+            client.registerConnectionStatusChangeCallback(new IotHubConnectionStatusChangeCallback() {
+                @Override
+                public void execute(IotHubConnectionStatus status, IotHubConnectionStatusChangeReason statusChangeReason, Throwable throwable, Object callbackContext) {
+                    Log.d(this.getClass().getSimpleName(), "status: " + status + " reason: " + statusChangeReason);
+                    WritableMap params = Arguments.createMap();
+                    params.putString("status", status.name());
+                    params.putString("statusChangeReason", statusChangeReason.name());
+                    emitHelper.emit(getReactContext(), "onConnectionStatusChange", params);
+                }
+            }, null);
+            connectionStatusChangeCallbackIsSet = true;
+        }
+    }
+
+    private void OpenConnection(Boolean shouldRetry, Promise promise) {
         try {
-            boolean isConnectionOpened = false;
-            while (!isConnectionOpened) {
+            if (client != null) {
                 try {
-                    client.open();
-                    isConnectionOpened = true;
+                    OpenClient(promise);
                 } catch (Exception e) {
                     if (shouldRetry) {
                         if (StringUtils.containsIgnoreCase(ExceptionUtils.getRootCauseMessage(e), "TransportException: Timed out waiting to connect to service")) {
@@ -243,6 +292,10 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
                         throw e;
                     }
                 }
+            } else {
+                String message = CLIENT_NULL + ", Call 'connectToHub' first, before trying to user the client";
+                Log.e(this.getClass().getSimpleName(), message);
+                promise.reject(this.getClass().getSimpleName(), message);
             }
         } catch (Exception e) {
             CloseClient(promise);
@@ -252,10 +305,9 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
         }
     }
 
-
     private void StartIotDeviceTwin(Promise promise) {
         try {
-            if (isConnectionOpened && !twinIsStarted) {
+            if (client != null && !twinIsStarted) {
                 client.startDeviceTwin(onDeviceTwinStatusCallback, null, twinPropertyCallBack, null);
                 twinIsStarted = true;
             }
@@ -269,7 +321,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
 
     private void SetMessageCallBack(Promise promise) {
         try {
-            if (isConnectionOpened && !messageCallbackIsSet) {
+            if (client != null && !messageCallbackIsSet) {
                 client.setMessageCallback(onMessageCallback, null);
                 messageCallbackIsSet = true;
             }
@@ -281,11 +333,9 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
         }
     }
 
-
-    private void SubscribeToDesiredProperties(ReadableArray
-                                                      desiredPropertySubscriptions, Promise promise) {
+    private void SubscribeToDesiredProperties(ReadableArray desiredPropertySubscriptions, Promise promise) {
         try {
-            if (isConnectionOpened && !isSubscribeToDesiredProperties) {
+            if (client != null && !isSubscribeToDesiredProperties) {
                 subscribeToDesiredProperties(desiredPropertySubscriptions);
                 isSubscribeToDesiredProperties = true;
             }
@@ -297,18 +347,14 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
         }
     }
 
-    @ReactMethod
-    public void connectToHub(String connectionString, ReadableArray desiredPropertySubscriptions, Boolean shouldRetry, Promise promise) {
-        getReactApplicationContext().addLifecycleEventListener(new IoTHubLifecycleEventListener(this, promise));
-        Thread connection = new Thread(new ConnectionRunnable(connectionString, desiredPropertySubscriptions, shouldRetry, promise));
-        connection.start();
-    }
+    ////----------------------------------------------------------------------------------------------------------------////
+////-------------------------------------------- IOT HUB CONNECTION HELPERS --------------------------------------------////
+////--------------------------------------------------------------------------------------------------------------------////
 
     public void CloseClient(Promise promise) {
         try {
             if (client != null) {
                 client.closeNow();
-                isConnectionOpened = false;
             }
         } catch (IOException ioException) {
             String message = "cannot close client. " + ioException.getMessage();
@@ -321,7 +367,6 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
         try {
             if (client != null) {
                 client.open();
-                isConnectionOpened = true;
             } else {
                 promise.reject(this.getClass().getSimpleName(), "IOT hub Client is not initialized");
             }
@@ -331,84 +376,6 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
             promise.reject(this.getClass().getSimpleName(), ioException);
         }
     }
-
-
-    class ConnectionRunnable implements Runnable {
-        String _connectionString;
-        ReadableArray _desiredPropertySubscriptions;
-        Boolean _shouldRetry;
-        Promise _promise;
-
-        public ConnectionRunnable(String connectionString, ReadableArray desiredPropertySubscriptions, Boolean shouldRetry, Promise promise) {
-            // store parameter for later user
-            _connectionString = connectionString;
-            _desiredPropertySubscriptions = desiredPropertySubscriptions;
-            _shouldRetry = shouldRetry;
-            _promise = promise;
-        }
-
-        public void run() {
-            try {
-                InitIotHubClient(_connectionString, _promise);
-                setConnectionStatusChangeCallback();
-                Connect(_shouldRetry, _promise);
-                StartIotDeviceTwin(_promise);
-                SetMessageCallBack(_promise);
-                SubscribeToDesiredProperties(_desiredPropertySubscriptions, _promise);
-                initialized = true;
-                _promise.resolve("Successfully connected!");
-            } catch (Exception e) {
-                if (isConnectionOpened) {
-                    CloseClient(_promise);
-                }
-                isConnectionOpened = false;
-                twinIsStarted = false;
-                messageCallbackIsSet = false;
-                isSubscribeToDesiredProperties = false;
-                initialized = false;
-                String message = "There was a problem connecting to the bug, but this should never be called. " + e.getMessage();
-                Log.e(this.getClass().getSimpleName(), message, e);
-                _promise.reject(this.getClass().getSimpleName(), e);
-            }
-        }
-    }
-
-////--------------------------------------------------------------------------------------------------------------------////
-////-------------------------------------------- NEW CONNECTION METHOD END ---------------------------------------------////
-////--------------------------------------------------------------------------------------------------------------------////
-
-////--------------------------------------------------------------------------------------------------------------------////
-    /// ORIGINAL HELPER METHODS [START]
-
-    private void setConnectionStatusChangeCallback() {
-        client.registerConnectionStatusChangeCallback(new IotHubConnectionStatusChangeCallback() {
-            @Override
-            public void execute(IotHubConnectionStatus status, IotHubConnectionStatusChangeReason statusChangeReason, Throwable throwable, Object callbackContext) {
-                Log.d(this.getClass().getSimpleName(), "status: " + status + " reason: " + statusChangeReason);
-                WritableMap params = Arguments.createMap();
-                params.putString("status", status.name());
-                params.putString("statusChangeReason", statusChangeReason.name());
-                emitHelper.emit(getReactContext(), "onConnectionStatusChange", params);
-            }
-        }, null);
-    }
-
-
-    private MessageCallback onMessageCallback() {
-        return new MessageCallback() {
-            @Override
-            public IotHubMessageResult execute(Message message, Object callbackContext) {
-                String messageString = new String(message.getBytes(), Message.DEFAULT_IOTHUB_MESSAGE_CHARSET);
-                Log.d(this.getClass().getSimpleName(), messageString);
-                WritableMap params = Arguments.createMap();
-                params.putString("message", messageString);
-                params.putString("messageId", message.getMessageId());
-                emitHelper.emit(getReactContext(), "onMessageReceived", params);
-                return IotHubMessageResult.COMPLETE;
-            }
-        };
-    }
-
 
     private void subscribeToDesiredProperties(ReadableArray desiredPropertySubscriptions) throws
             IOException {
@@ -431,10 +398,10 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
         return constants;
     }
 
-    /// ORIGINAL HELPER METHODS [END]
+////--------------------------------------------------------------------------------------------------------------------////
+////-------------------------------------------- NEW CONNECTION METHOD END ---------------------------------------------////
 ////--------------------------------------------------------------------------------------------------------------------////
 
-////--------------------------------------------------------------------------------------------------------------------////
     /// NEW METHODS IMPLEMENTED BY FRANCOIS VAN DER MERWE [START]
 
 
@@ -448,14 +415,12 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     public void sendMessage(ReadableArray properties, String eventMessage, Promise promise) {
         try {
             OpenClient(promise);
-            if (isConnectionOpened) {
-                CreateMessageToSend(properties, eventMessage);
-                EventCallback eventCallback = new EventCallback();
-                client.sendEventAsync(sendMessage, eventCallback, msgSentCount);
-                msgSentCount++;
-                //handler.post(updateRunnable);
-                promise.resolve("Event Message sent Successfully!");
-            }
+            CreateMessageToSend(properties, eventMessage);
+            EventCallback eventCallback = new EventCallback();
+            client.sendEventAsync(sendMessage, eventCallback, msgSentCount);
+            msgSentCount++;
+            //handler.post(updateRunnable);
+            promise.resolve("Event Message sent Successfully!");
         } catch (Exception e) {
 //            if (StringUtils.containsIgnoreCase(ExceptionUtils.getRootCauseMessage(e), "connections is closed")) {
 //                OpenClient(promise);
