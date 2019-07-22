@@ -460,10 +460,9 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
 //                OpenClient(promise);
 //                sendMessage(properties, eventMessage, promise);
 //            } else {
-                String message = "There was a problem sending Event Message. " + e.getMessage();
-                Log.e(this.getClass().getSimpleName(), message, e);
-                promise.reject(this.getClass().getSimpleName(), e);
-            }
+            String message = "There was a problem sending Event Message. " + e.getMessage();
+            Log.e(this.getClass().getSimpleName(), message, e);
+            promise.reject(this.getClass().getSimpleName(), e);
         }
     }
 
@@ -503,6 +502,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
                 emitHelper.emit(getReactContext(), "onEventCallback", params);
             }
         }
+
     }
 
     private boolean isAppIsInBackground(Context context) {
