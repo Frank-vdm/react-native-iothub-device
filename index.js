@@ -53,6 +53,10 @@ export async function connectToHub(connectionString, desiredPropertySubscription
     return IoTHubDeviceModule.connectToHub(connectionString, desiredPropertySubscriptions, shouldRetry);
 }
 
+export async function disconnectFromHub(){
+return IoTHubDeviceModule.disconnectFromHub();
+}
+
 export async function requestTwinProperties(){
     return await IoTHubDeviceModule.requestTwinProperties();
 }

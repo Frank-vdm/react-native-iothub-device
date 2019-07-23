@@ -167,6 +167,13 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
         connection.start();
     }
 
+    @ReactMethod
+    public void disconnectFromHub(Promise promise) {
+        CloseClient(promise);
+        client = null;
+        promise.resolve("Discconnected!");
+    }
+
 
     ////----------------------------------------------------------------------------------------------------------------////
 ////------------------------------------------- (Runnable) Connection Client  ------------------------------------------////
