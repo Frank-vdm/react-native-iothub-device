@@ -50,6 +50,14 @@ export async function connectToHub(connectionString, desiredPropertySubscription
         onEventCallback(event);
     });
 
+    new NativeEventEmitter(IoTHubDeviceModule).addListener('log', (event) => {
+        console.log(event.message);
+    });
+
+     new NativeEventEmitter(IoTHubDeviceModule).addListener('error', (event) => {
+            console.log("IOT HUB INTERNAL ERROR:", event);
+        });
+
     return IoTHubDeviceModule.connectToHub(connectionString, desiredPropertySubscriptions, shouldRetry);
 }
 

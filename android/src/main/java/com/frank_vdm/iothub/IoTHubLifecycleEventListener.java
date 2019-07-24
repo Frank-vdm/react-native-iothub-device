@@ -11,26 +11,28 @@ public class IoTHubLifecycleEventListener implements LifecycleEventListener {
     private IoTHubDeviceModule _client;
     private Promise _promise;
 
-    IoTHubLifecycleEventListener(IoTHubDeviceModule client, Promise promise) {
+    IoTHubLifecycleEventListener(IoTHubDeviceModule client) {
         _client = client;
-        _promise = promise;
     }
 
     @Override
     public void onHostResume() {
         Log.i(this.getClass().getSimpleName(), "onHostResume");
-        _client.OpenClient(_promise);
+        _client.emitHelper.log(_client.getReactContext(), "onHostResume");
+        _client.startClient();
     }
 
     @Override
     public void onHostPause() {
         Log.i(this.getClass().getSimpleName(), "onHostPause");
-        _client.CloseClient(_promise);
+        _client.emitHelper.log(_client.getReactContext(), "onHostPause");
+        _client.stopClient();
     }
 
     @Override
     public void onHostDestroy() {
         Log.i(this.getClass().getSimpleName(), "onHostDestroy");
-        _client.CloseClient(_promise);
+        _client.emitHelper.log(_client.getReactContext(), "onHostDestroy");
+        _client.stopClient();
     }
 }
