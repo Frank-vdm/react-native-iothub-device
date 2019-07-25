@@ -280,14 +280,15 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
                     Thread.sleep(2000);
                     _shouldRetry = false;
                     InitClient();
-                } else {
-                    emitHelper.logError(getReactContext(), e);
-                    System.err.println("Exception while opening IoTHub connection: " + e.getMessage());
-                    client.closeNow();
-                    clientBusy = false;
-                    client = null;
-                    System.out.println("Shutting down...");
                 }
+//                else {
+//                    emitHelper.logError(getReactContext(), e);
+//                    System.err.println("Exception while opening IoTHub connection: " + e.getMessage());
+//                    client.closeNow();
+//                    clientBusy = false;
+//                    client = null;
+//                    System.out.println("Shutting down...");
+//                }
             } catch (Exception e2) {
                 emitHelper.logError(getReactContext(), e2);
                 System.err.println("Exception while opening IoTHub connection: " + e2.getMessage());
