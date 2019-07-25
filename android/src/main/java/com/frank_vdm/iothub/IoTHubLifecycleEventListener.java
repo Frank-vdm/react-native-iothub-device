@@ -28,14 +28,7 @@ public class IoTHubLifecycleEventListener implements LifecycleEventListener {
     public void onHostPause() {
         Log.i(this.getClass().getSimpleName(), "onHostPause");
         _client.emitHelper.log(_client.getReactContext(), "onHostPause");
-//        Thread t = new Thread() {
-//            public void run() {
-//                _client.stopClient();
-//            }
-//        };
-//        t.start();
-        new Thread()
-        {
+        new Thread() {
             public void run() {
                 _client.stopClient();
             }
