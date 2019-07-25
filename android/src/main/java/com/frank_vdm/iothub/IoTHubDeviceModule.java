@@ -248,9 +248,10 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     public boolean clientBusy = false;
 
     private void InitClient() throws URISyntaxException, IOException {
-        if (clientBusy) {
-            Thread.sleep(1000);
-        } else if (!clientBusy) {
+        //if (clientBusy) {
+        //    Thread.sleep(1000);
+        //} else
+        if (!clientBusy) {
             emitHelper.log(getReactContext(), "InitClient");
             clientBusy = true;
             client = new DeviceClient(_connectionString, IotHubClientProtocol.AMQPS_WS);
