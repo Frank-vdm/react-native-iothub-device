@@ -247,7 +247,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
 ////--------------------------------------------------------------------------------------------------------------------////
     public boolean clientBusy = false;
 
-    private void InitClient() throws URISyntaxException, IOException, InterruptedException {
+    private void InitClient() throws URISyntaxException, IOException {
         if (clientBusy) {
             Thread.sleep(1000);
         } else if (!clientBusy) {
@@ -281,14 +281,14 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
                     _shouldRetry = false;
                     InitClient();
                 }
-//                else {
-//                    emitHelper.logError(getReactContext(), e);
-//                    System.err.println("Exception while opening IoTHub connection: " + e.getMessage());
-//                    client.closeNow();
-//                    clientBusy = false;
-//                    client = null;
-//                    System.out.println("Shutting down...");
-//                }
+                else {
+                    emitHelper.logError(getReactContext(), e);
+                    System.err.println("Exception while opening IoTHub connection: " + e.getMessage());
+                    client.closeNow();
+                    clientBusy = false;
+                    client = null;
+                    System.out.println("Shutting down...");
+                }
             } catch (Exception e2) {
                 emitHelper.logError(getReactContext(), e2);
                 System.err.println("Exception while opening IoTHub connection: " + e2.getMessage());
