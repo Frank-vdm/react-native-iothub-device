@@ -359,8 +359,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
 
     private void SendMessage(ReadableArray properties, String eventMessage, Promise promise) {
         try {
-
-            if (client != null) {
+            if (client != null && hasInternetConnection()) {
                 client.open();
                 CreateMessageToSend(properties, eventMessage);
                 EventCallback eventCallback = new EventCallback();
@@ -368,6 +367,8 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
                 msgSentCount++;
                 //handler.post(updateRunnable);
                 promise.resolve("Event Message sent Successfully!");
+            } else {
+                promise.resolve("unable to send Event Message!");
             }
         } catch (Exception e) {
             String message = "There was a problem sending Event Message. " + e.getMessage();
