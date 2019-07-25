@@ -6,6 +6,8 @@ import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.Promise;
 import com.frank_vdm.iothub.IoTHubDeviceModule;
 
+import java.lang.Thread;
+
 public class IoTHubLifecycleEventListener implements LifecycleEventListener {
 
     private IoTHubDeviceModule _client;
@@ -26,7 +28,12 @@ public class IoTHubLifecycleEventListener implements LifecycleEventListener {
     public void onHostPause() {
         Log.i(this.getClass().getSimpleName(), "onHostPause");
         _client.emitHelper.log(_client.getReactContext(), "onHostPause");
-        _client.stopClient();
+        Thread t = new Thread() {
+            public void run() {
+                _client.stopClient();
+            }
+        }.start();
+
     }
 
     @Override

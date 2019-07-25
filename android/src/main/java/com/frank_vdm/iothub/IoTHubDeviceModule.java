@@ -274,11 +274,23 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
                 System.err.println("Exception while opening IoTHub connection: " + e2.getMessage());
                 client.closeNow();
                 connecting = false;
+                client = null;
                 System.out.println("Shutting down...");
             }
         }
 
     }
+
+//    private void OpenClientConnection() throws URISyntaxException, IOException
+//    {
+//        try{
+//            client.open();
+//        }
+//        catch{
+//
+//    }
+//
+//    }
 
 
     ////----------------------------------------------------------------------------------------------------------------////
@@ -360,7 +372,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     private void SendMessage(ReadableArray properties, String eventMessage, Promise promise) {
         try {
             if (client != null && hasInternetConnection()) {
-                client.open();
+                InitClient();
                 CreateMessageToSend(properties, eventMessage);
                 EventCallback eventCallback = new EventCallback();
                 client.sendEventAsync(sendMessage, eventCallback, msgSentCount);
