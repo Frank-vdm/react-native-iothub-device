@@ -58,7 +58,7 @@ export async function connectToHub(connectionString, desiredPropertySubscription
             console.log("IOT HUB INTERNAL ERROR:", event);
         });
 
-    return IoTHubDeviceModule.connectToHub(connectionString, desiredPropertySubscriptions, shouldRetry);
+    return IoTHubDeviceModule.connectToHub(connectionString, desiredPropertySubscriptions, shouldRetry, true);
 }
 
 export async function disconnectFromHub(){

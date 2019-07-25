@@ -74,20 +74,6 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
         onDesiredPropertyUpdate = new OnDesiredPropertyUpdate(this, getReactApplicationContext());
     }
 
-    @ReactMethod
-    public void sendReportedProperties(ReadableArray array, Promise promise) {
-        if (iotDevice != null && hasInternetConnection()) {
-            iotDevice.SendReportedProperties(array, promise);
-        }
-    }
-
-    @ReactMethod
-    public void sendReportedProperty(ReadableMap input, Callback success, Callback failure) {
-        if (iotDevice != null && hasInternetConnection()) {
-            iotDevice.SendReportedProperty(input, success, failure);
-        }
-    }
-
     @Override
     public Map<String, Object> getConstants() {
         final Map<String, Object> constants = new HashMap<>();
@@ -95,14 +81,39 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     }
 
 
-    IotHubDeviceClient iotDevice;
+    @ReactMethod
+    public void sendReportedProperties(ReadableArray array, Promise promise) {
+        if (client != null && hasInternetConnection()) {
+            SendReportedProperties(array, promise);
+        }
+    }
 
     @ReactMethod
-    public void connectToHub(String connectionString, ReadableArray desiredPropertySubscriptions, Boolean shouldRetry, Promise promise) {
-        iotDevice = new IotHubDeviceClient(connectionString, desiredPropertySubscriptions, shouldRetry, promise);
+    public void sendReportedProperty(ReadableMap input, Callback success, Callback failure) {
+        if (client != null && hasInternetConnection()) {
+            SendReportedProperty(input, success, failure);
+        }
+    }
+
+
+    protected DeviceClient client;
+    protected String _connectionString;
+    protected ReadableArray _desiredPropertySubscriptions;
+    protected Promise _promise;
+
+    @ReactMethod
+    public void connectToHub(String connectionString, ReadableArray desiredPropertySubscriptions, Boolean shouldRetry, Boolean useTreading, Promise promise) {
+        _connectionString = connectionString;
+        _desiredPropertySubscriptions = desiredPropertySubscriptions;
+        _promise = promise;
+
         if (hasInternetConnection()) {
-            Thread t = new Thread(iotDevice);
-            t.start();
+            if (useTreading) {
+                Thread t = new Thread(new IotHubDeviceClient());
+                t.start();
+            } else {
+                ExecuteConnection();
+            }
         } else {
             emitHelper.log(getReactContext(), "no network connection");
             promise.resolve("no network connection");
@@ -113,8 +124,8 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void disconnectFromHub(Promise promise) {
         try {
-            iotDevice.stopClient();
-            promise.resolve("Successfully connected!");
+            closeClientConnection();
+            promise.resolve("Successfully disconnected!");
         } catch (Exception e) {
             promise.reject(this.getClass().getSimpleName(), e);
             emitHelper.logError(getReactContext(), e);
@@ -124,7 +135,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void sendMessage(ReadableArray properties, String eventMessage, Promise promise) {
         try {
-            iotDevice.sendMessage(properties, eventMessage, promise);
+            SendMessage(properties, eventMessage, promise);
         } catch (Exception e) {
             promise.reject(this.getClass().getSimpleName(), e);
             emitHelper.logError(getReactContext(), e);
@@ -134,7 +145,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
 
     public void stopClient() {
         try {
-            iotDevice.stopClient();
+            closeClientConnection();
         } catch (Exception e) {
             emitHelper.logError(getReactContext(), e);
         }
@@ -142,7 +153,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
 
     public void startClient() {
         try {
-            iotDevice.startClient();
+            openClientConnection();
         } catch (Exception e) {
             emitHelper.logError(getReactContext(), e);
         }
@@ -174,7 +185,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     }
 
     private void AddLifeCycleListener() {
-        if (iotDevice != null) {
+        if (client != null) {
             getReactContext().addLifecycleEventListener(new IoTHubLifecycleEventListener(this));
         } else {
             emitHelper.log(getReactContext(), "Iot Hub Device Client is not initilized");
@@ -190,293 +201,280 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     class IotHubDeviceClient implements Runnable {
 
 
-        private String _connectionString;
-        private ReadableArray _desiredPropertySubscriptions;
-        private Boolean _shouldRetry;
-        private Promise _promise;
-
-
-        private DeviceClient client;
-
-
-        public IotHubDeviceClient(String connectionString, ReadableArray desiredPropertySubscriptions, Boolean shouldRetry, Promise promise) {
-            _connectionString = connectionString;
-            _desiredPropertySubscriptions = desiredPropertySubscriptions;
-            _shouldRetry = shouldRetry;
-            _promise = promise;
+        public IotHubDeviceClient() {
         }
 
 
         public void run() {
             emitHelper.log(getReactContext(), "IotHubDeviceClient Start");
-            connectToHub(_promise);
+            connectToHub();
             emitHelper.log(getReactContext(), "IotHubDeviceClient End");
         }
+    }
+
+    protected void ExecuteConnection() {
+        emitHelper.log(getReactContext(), "ExecuteConnection Start");
+        connectToHub();
+        emitHelper.log(getReactContext(), "ExecuteConnection End");
+    }
 
 
-        public void connectToHub(Promise promise) {
-            try {
-                InitClient();
-                promise.resolve("Successfully connected!");
-            } catch (URISyntaxException uriSyntaxException) {
-                emitHelper.logError(getReactContext(), uriSyntaxException);
-                String message = "The connection string is Malformed. " + uriSyntaxException.getMessage();
-                Log.e(this.getClass().getSimpleName(), message, uriSyntaxException);
+    protected void connectToHub() {
+        try {
+            InitClient();
+            _promise.resolve("Successfully connected!");
+        } catch (URISyntaxException uriSyntaxException) {
+            emitHelper.logError(getReactContext(), uriSyntaxException);
+            String message = "The connection string is Malformed. " + uriSyntaxException.getMessage();
+            Log.e(this.getClass().getSimpleName(), message, uriSyntaxException);
 
-                promise.reject(this.getClass().getSimpleName(), uriSyntaxException);
-            } catch (IOException ioException) {
-                String message = "There was a problem connecting to the IOT Hub. " + ioException.getMessage();
-                emitHelper.logError(getReactContext(), ioException);
-                Log.e(this.getClass().getSimpleName(), message, ioException);
+            _promise.reject(this.getClass().getSimpleName(), uriSyntaxException);
+        } catch (IOException ioException) {
+            String message = "There was a problem connecting to the IOT Hub. " + ioException.getMessage();
+            emitHelper.logError(getReactContext(), ioException);
+            Log.e(this.getClass().getSimpleName(), message, ioException);
 
-                promise.reject(this.getClass().getSimpleName(), ioException);
-            }
+            _promise.reject(this.getClass().getSimpleName(), ioException);
         }
+    }
 
 
-        ////--------------------------------------------------- INITIALIZE -------------------------------------------------////
+    ////--------------------------------------------------- INITIALIZE -------------------------------------------------////
 ////--------------------------------------------------------------------------------------------------------------------////
-        boolean connecting = false;
+    boolean connecting = false;
 
-        private void InitClient() throws URISyntaxException, IOException {
-            if (!connecting) {
-                emitHelper.log(getReactContext(), "InitClient");
-                connecting = true;
-                client = new DeviceClient(_connectionString, IotHubClientProtocol.AMQPS_WS);
-                try {
-                    SetConnectionStatusChangeCallback();
-                    AddLifeCycleListener();
-                    SetMessageCallback();
+    private void InitClient() throws URISyntaxException, IOException {
+        if (!connecting) {
+            emitHelper.log(getReactContext(), "InitClient");
+            connecting = true;
+            client = new DeviceClient(_connectionString, IotHubClientProtocol.AMQPS_WS);
+            try {
+                SetConnectionStatusChangeCallback();
+                AddLifeCycleListener();
+                SetMessageCallback();
 
-                    client.open();
+                client.open();
 
-                    SubscribeToDeviceMethod();
-                    Succeed.set(false);
-                    StartDeviceTwin();
+                SubscribeToDeviceMethod();
+                Succeed.set(false);
+                StartDeviceTwin();
 
-                    do {
-                        Thread.sleep(1000);
-                    }
-                    while (!Succeed.get());
-
-                    SubscribeToDesiredProperties();
-
-                    System.out.println("Subscribe to Desired properties on device Twin...");
-                    emitHelper.log(getReactContext(), "Done");
-                    connecting = false;
-                } catch (Exception e2) {
-                    emitHelper.logError(getReactContext(), e2);
-                    System.err.println("Exception while opening IoTHub connection: " + e2.getMessage());
-                    client.closeNow();
-                    connecting = false;
-                    System.out.println("Shutting down...");
+                do {
+                    Thread.sleep(1000);
                 }
+                while (!Succeed.get());
+
+                SubscribeToDesiredProperties();
+
+                System.out.println("Subscribe to Desired properties on device Twin...");
+                emitHelper.log(getReactContext(), "Done");
+                connecting = false;
+            } catch (Exception e2) {
+                emitHelper.logError(getReactContext(), e2);
+                System.err.println("Exception while opening IoTHub connection: " + e2.getMessage());
+                client.closeNow();
+                connecting = false;
+                System.out.println("Shutting down...");
             }
-
         }
 
-
-        public boolean hasInternetConnection() {
-            ConnectivityManager mgr = (ConnectivityManager) getReactContext().getSystemService(getReactContext().CONNECTIVITY_SERVICE);
-            return mgr.isDefaultNetworkActive();
-        }
+    }
 
 
-        ////----------------------------------------------------------------------------------------------------------------////
+    ////----------------------------------------------------------------------------------------------------------------////
 ////------------------------------------------------------- Message Callback ------------------------------------------////
-        private void SetMessageCallback() {
-            if (client != null) {
-                emitHelper.log(getReactContext(), "SetMessageCallback");
-                client.setMessageCallback(new MessageCallback(), null);
-            } else {
-                emitHelper.log(getReactContext(), "Iot Hub Device Client is not initilized");
-            }
+    private void SetMessageCallback() {
+        if (client != null) {
+            emitHelper.log(getReactContext(), "SetMessageCallback");
+            client.setMessageCallback(new MessageCallback(), null);
+        } else {
+            emitHelper.log(getReactContext(), "Iot Hub Device Client is not initilized");
         }
+    }
 
 
-        ////----------------------------------------------------------------------------------------------------------------////
+    ////----------------------------------------------------------------------------------------------------------------////
 ////------------------------------------------------------- Device Method Callback ------------------------------------////
-        private void SubscribeToDeviceMethod() throws IOException {
-            if (client != null) {
-                emitHelper.log(getReactContext(), "SubscribeToDeviceMethod");
-                client.subscribeToDeviceMethod(new SampleDeviceMethodCallback(), null, new DeviceMethodStatusCallback(), null);
-            } else {
-                emitHelper.log(getReactContext(), "Iot Hub Device Client is not initilized");
-            }
+    private void SubscribeToDeviceMethod() throws IOException {
+        if (client != null) {
+            emitHelper.log(getReactContext(), "SubscribeToDeviceMethod");
+            client.subscribeToDeviceMethod(new SampleDeviceMethodCallback(), null, new DeviceMethodStatusCallback(), null);
+        } else {
+            emitHelper.log(getReactContext(), "Iot Hub Device Client is not initilized");
         }
+    }
 
 
-        ////----------------------------------------------------------------------------------------------------------------////
+    ////----------------------------------------------------------------------------------------------------------------////
 ////------------------------------------------------------- Device Twin Status Callback --------------------------------////
-        private void StartDeviceTwin() throws IOException {
-            if (client != null) {
-                emitHelper.log(getReactContext(), "StartDeviceTwin");
-                client.startDeviceTwin(new DeviceTwinStatusCallback(), null, new onProperty(), null);
-            } else {
-                emitHelper.log(getReactContext(), "Iot Hub Device Client is not initilized");
-            }
+    private void StartDeviceTwin() throws IOException {
+        if (client != null) {
+            emitHelper.log(getReactContext(), "StartDeviceTwin");
+            client.startDeviceTwin(new DeviceTwinStatusCallback(), null, new onProperty(), null);
+        } else {
+            emitHelper.log(getReactContext(), "Iot Hub Device Client is not initilized");
         }
+    }
 
 
-        ////----------------------------------------------------------------------------------------------------------------////
+    ////----------------------------------------------------------------------------------------------------------------////
 ////------------------------------------------------------- Lyfe Cycle Listener ----------------------------------------////
 
 
-        ////----------------------------------------------------------------------------------------------------------------////
+    ////----------------------------------------------------------------------------------------------------------------////
 ////------------------------------------------------------- Twin Properties --------------------------------------------////
-        private void SubscribeToDesiredProperties() throws IOException {
-            if (client != null) {
-                emitHelper.log(getReactContext(), "SubscribeToDesiredProperties");
-                if (_desiredPropertySubscriptions == null || _desiredPropertySubscriptions.size() == 0) {
-                    return;
-                }
-                Map<Property, Pair<TwinPropertyCallBack, Object>> subscriptions = new HashMap<>();
-                for (int i = 0; i < _desiredPropertySubscriptions.size(); i++) {
-                    subscriptions.put(new Property(_desiredPropertySubscriptions.getString(i), null),
-                            new Pair<TwinPropertyCallBack, Object>(onDesiredPropertyUpdate, null));
-                }
-                if (!subscriptions.isEmpty()) {
-                    client.subscribeToTwinDesiredProperties(subscriptions);
-                }
-            } else {
-                emitHelper.log(getReactContext(), "Iot Hub Device Client is not initilized");
+    private void SubscribeToDesiredProperties() throws IOException {
+        if (client != null) {
+            emitHelper.log(getReactContext(), "SubscribeToDesiredProperties");
+            if (_desiredPropertySubscriptions == null || _desiredPropertySubscriptions.size() == 0) {
+                return;
             }
+            Map<Property, Pair<TwinPropertyCallBack, Object>> subscriptions = new HashMap<>();
+            for (int i = 0; i < _desiredPropertySubscriptions.size(); i++) {
+                subscriptions.put(new Property(_desiredPropertySubscriptions.getString(i), null),
+                        new Pair<TwinPropertyCallBack, Object>(onDesiredPropertyUpdate, null));
+            }
+            if (!subscriptions.isEmpty()) {
+                client.subscribeToTwinDesiredProperties(subscriptions);
+            }
+        } else {
+            emitHelper.log(getReactContext(), "Iot Hub Device Client is not initilized");
         }
+    }
 
-        ////----------------------------------------------------------------------------------------------------------------////
+    ////----------------------------------------------------------------------------------------------------------------////
 ////------------------------------------------------------- Iot Hub Connection Status Change Callback ------------------////
-        private void SetConnectionStatusChangeCallback() {
-            if (client != null) {
-                emitHelper.log(getReactContext(), "SetConnectionStatusChangeCallback");
-                client.registerConnectionStatusChangeCallback(new ConnectionChangedCallback(), null);
-            } else {
-                emitHelper.log(getReactContext(), "Iot Hub Device Client is not initilized");
-            }
+    private void SetConnectionStatusChangeCallback() {
+        if (client != null) {
+            emitHelper.log(getReactContext(), "SetConnectionStatusChangeCallback");
+            client.registerConnectionStatusChangeCallback(new ConnectionChangedCallback(), null);
+        } else {
+            emitHelper.log(getReactContext(), "Iot Hub Device Client is not initilized");
         }
+    }
 
 
-        ////----------------------------------------------------------------------------------------------------------------////
+    ////----------------------------------------------------------------------------------------------------------------////
 ////------------------------------------------------------- Event Callback ---------------------------------------------////
 
-        public void sendMessage(ReadableArray properties, String eventMessage, Promise promise) {
-            try {
+    private void SendMessage(ReadableArray properties, String eventMessage, Promise promise) {
+        try {
 
-                if (client != null) {
-                    client.open();
-                    CreateMessageToSend(properties, eventMessage);
-                    EventCallback eventCallback = new EventCallback();
-                    client.sendEventAsync(sendMessage, eventCallback, msgSentCount);
-                    msgSentCount++;
-                    //handler.post(updateRunnable);
-                    promise.resolve("Event Message sent Successfully!");
-                }
-            } catch (Exception e) {
-                String message = "There was a problem sending Event Message. " + e.getMessage();
-                Log.e(this.getClass().getSimpleName(), message, e);
-                promise.reject(this.getClass().getSimpleName(), e);
-            }
-        }
-
-        private void CreateMessageToSend(ReadableArray properties, String eventMessage) {
-            sendMessage = new Message(eventMessage);
-            // set properties
-            for (int i = 0; i < properties.size(); i++) {
-                ReadableMap map = properties.getMap(i);
-                String key = map.getString("key");
-                Object value = getDynamicValue(map, "value");
-                sendMessage.setProperty(key, value.toString());
-            }
-            sendMessage.setMessageId(java.util.UUID.randomUUID().toString());
-        }
-
-
-        ////----------------------------------------------------------------------------------------------------------------////
-////------------------------------------------------------- Connection Actions -----------------------------------------////
-        public void stopClient() throws URISyntaxException, IOException {
             if (client != null) {
-                emitHelper.log(getReactContext(), "stopClient");
-                String OPERATING_SYSTEM = System.getProperty("os.name");
-                client.closeNow();
-                emitHelper.log(getReactContext(), "Client closed");
-                System.out.println("Shutting down..." + OPERATING_SYSTEM);
-                android.os.Process.killProcess(android.os.Process.myPid());
+                client.open();
+                CreateMessageToSend(properties, eventMessage);
+                EventCallback eventCallback = new EventCallback();
+                client.sendEventAsync(sendMessage, eventCallback, msgSentCount);
+                msgSentCount++;
+                //handler.post(updateRunnable);
+                promise.resolve("Event Message sent Successfully!");
             }
+        } catch (Exception e) {
+            String message = "There was a problem sending Event Message. " + e.getMessage();
+            Log.e(this.getClass().getSimpleName(), message, e);
+            promise.reject(this.getClass().getSimpleName(), e);
         }
+    }
 
-        public void startClient() throws URISyntaxException, IOException {
-            if (client != null && hasInternetConnection()) {
-                emitHelper.log(getReactContext(), "startClient");
-                try {
-                    InitClient();
-                } catch (URISyntaxException uriSyntaxException) {
-                    String message = "The connection string is Malformed. " + uriSyntaxException.getMessage();
-                    emitHelper.logError(getReactContext(), uriSyntaxException);
-                } catch (IOException ioException) {
-                    String message = "There was a problem connecting to the IOT Hub. " + ioException.getMessage();
-                    emitHelper.logError(getReactContext(), ioException);
-                    //Log.e(this.getClass().getSimpleName(), message, ioException);
-                    //promise.reject(this.getClass().getSimpleName(), ioException);
-                }
+    private void CreateMessageToSend(ReadableArray properties, String eventMessage) {
+        sendMessage = new Message(eventMessage);
+        // set properties
+        for (int i = 0; i < properties.size(); i++) {
+            ReadableMap map = properties.getMap(i);
+            String key = map.getString("key");
+            Object value = getDynamicValue(map, "value");
+            sendMessage.setProperty(key, value.toString());
+        }
+        sendMessage.setMessageId(java.util.UUID.randomUUID().toString());
+    }
+
+
+    ////----------------------------------------------------------------------------------------------------------------////
+////------------------------------------------------------- Connection Actions -----------------------------------------////
+    private void closeClientConnection() throws URISyntaxException, IOException {
+        if (client != null) {
+            emitHelper.log(getReactContext(), "stopClient");
+            String OPERATING_SYSTEM = System.getProperty("os.name");
+            client.closeNow();
+            emitHelper.log(getReactContext(), "Client closed");
+            System.out.println("Shutting down..." + OPERATING_SYSTEM);
+            android.os.Process.killProcess(android.os.Process.myPid());
+        }
+    }
+
+    private void openClientConnection() throws URISyntaxException, IOException {
+        if (client != null && hasInternetConnection()) {
+            emitHelper.log(getReactContext(), "startClient");
+            try {
+                InitClient();
+            } catch (URISyntaxException uriSyntaxException) {
+                String message = "The connection string is Malformed. " + uriSyntaxException.getMessage();
+                emitHelper.logError(getReactContext(), uriSyntaxException);
+            } catch (IOException ioException) {
+                String message = "There was a problem connecting to the IOT Hub. " + ioException.getMessage();
+                emitHelper.logError(getReactContext(), ioException);
+                //Log.e(this.getClass().getSimpleName(), message, ioException);
+                //promise.reject(this.getClass().getSimpleName(), ioException);
+            }
 
 //            String OPERATING_SYSTEM = System.getProperty("os.name");
 //            client.closeNow();
 //            System.out.println("Shutting down..." + OPERATING_SYSTEM);
 //            android.os.Process.killProcess(android.os.Process.myPid());
-            }
         }
+    }
 
-        ////----------------------------------------------------------------------------------------------------------------////
+    ////----------------------------------------------------------------------------------------------------------------////
 ////------------------------------------------------------- Send Reported Property -------------------------------------////
-        public void SendReportedProperty(ReadableMap input, Callback success, Callback failure) {
-            try {
-                emitHelper.log(getReactContext(), "SendReportedProperty");
-                Property property = new Property(input.getString("key"), getDynamicValue(input, "value"));
-                client.sendReportedProperties(Sets.newHashSet(property));
-                if (success != null) {
-                    success.invoke();
-                }
-            } catch (IOException e) {
-                Log.e(this.getClass().getSimpleName(), e.getMessage(), e);
-                if (failure != null) {
-                    failure.invoke(e.getMessage());
-                }
+    private void SendReportedProperty(ReadableMap input, Callback success, Callback failure) {
+        try {
+            emitHelper.log(getReactContext(), "SendReportedProperty");
+            Property property = new Property(input.getString("key"), getDynamicValue(input, "value"));
+            client.sendReportedProperties(Sets.newHashSet(property));
+            if (success != null) {
+                success.invoke();
+            }
+        } catch (IOException e) {
+            Log.e(this.getClass().getSimpleName(), e.getMessage(), e);
+            if (failure != null) {
+                failure.invoke(e.getMessage());
             }
         }
+    }
 
-        ////----------------------------------------------------------------------------------------------------------------////
+    ////----------------------------------------------------------------------------------------------------------------////
 ////------------------------------------------------------- Send Reported Properties -----------------------------------////
-        public void SendReportedProperties(ReadableArray array, Promise promise) {
-            emitHelper.log(getReactContext(), "SendReportedProperties");
-            Set<Property> propertiesToSet = new LinkedHashSet<>();
-            for (int i = 0; i < array.size(); i++) {
-                ReadableMap map = array.getMap(i);
-                String key = map.getString("key");
-                Object value = getDynamicValue(map, "value");
-                propertiesToSet.add(new Property(key, value));
+    private void SendReportedProperties(ReadableArray array, Promise promise) {
+        emitHelper.log(getReactContext(), "SendReportedProperties");
+        Set<Property> propertiesToSet = new LinkedHashSet<>();
+        for (int i = 0; i < array.size(); i++) {
+            ReadableMap map = array.getMap(i);
+            String key = map.getString("key");
+            Object value = getDynamicValue(map, "value");
+            propertiesToSet.add(new Property(key, value));
+        }
+        try {
+            client.sendReportedProperties(propertiesToSet);
+            if (promise != null) {
+                promise.resolve(true);
             }
-            try {
-                client.sendReportedProperties(propertiesToSet);
-                if (promise != null) {
-                    promise.resolve(true);
-                }
-            } catch (IOException e) {
-                Log.e(this.getClass().getSimpleName(), e.getMessage(), e);
-                if (promise != null) {
-                    promise.reject(e);
-                }
+        } catch (IOException e) {
+            Log.e(this.getClass().getSimpleName(), e.getMessage(), e);
+            if (promise != null) {
+                promise.reject(e);
             }
         }
+    }
 
-        private Object getDynamicValue(ReadableMap input, String key) {
-            if (input.getType(key) == ReadableType.String) {
-                return input.getString(key);
-            } else if (input.getType(key) == ReadableType.Boolean) {
-                return input.getBoolean(key);
-            } else if (input.getType(key) == ReadableType.Number) {
-                return input.getDouble(key);
-            } else {
-                return input.getString(key);
-            }
+    private Object getDynamicValue(ReadableMap input, String key) {
+        if (input.getType(key) == ReadableType.String) {
+            return input.getString(key);
+        } else if (input.getType(key) == ReadableType.Boolean) {
+            return input.getBoolean(key);
+        } else if (input.getType(key) == ReadableType.Number) {
+            return input.getDouble(key);
+        } else {
+            return input.getString(key);
         }
     }
 
