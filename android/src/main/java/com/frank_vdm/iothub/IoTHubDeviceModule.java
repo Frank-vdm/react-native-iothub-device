@@ -395,11 +395,11 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     private void closeClientConnection() throws URISyntaxException, IOException {
         if (client != null) {
             emitHelper.log(getReactContext(), "stopClient");
-            String OPERATING_SYSTEM = System.getProperty("os.name");
+            //String OPERATING_SYSTEM = System.getProperty("os.name");
             client.closeNow();
             emitHelper.log(getReactContext(), "Client closed");
-            System.out.println("Shutting down..." + OPERATING_SYSTEM);
-            android.os.Process.killProcess(android.os.Process.myPid());
+            //System.out.println("Shutting down..." + OPERATING_SYSTEM);
+            //android.os.Process.killProcess(android.os.Process.myPid());
         }
     }
 
