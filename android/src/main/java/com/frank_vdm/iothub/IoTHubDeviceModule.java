@@ -247,7 +247,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
 ////--------------------------------------------------------------------------------------------------------------------////
     public boolean clientBusy = false;
 
-    private void InitClient() throws URISyntaxException, IOException {
+    private void InitClient() throws URISyntaxException, IOException, InterruptedException {
         if (clientBusy) {
             Thread.sleep(1000);
         } else if (!clientBusy) {
