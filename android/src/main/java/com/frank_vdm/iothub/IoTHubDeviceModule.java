@@ -274,7 +274,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
 
                 System.out.println("Subscribe to Desired properties on device Twin...");
                 emitHelper.log(getReactContext(), "Done");
-                clientBusy = false
+                clientBusy = false;
 //              } catch (Exception e) {
 //                if (StringUtils.containsIgnoreCase(ExceptionUtils.getRootCauseMessage(e), "TransportException: Timed out waiting to connect to service") && _shouldRetry) {
 //                    Thread.sleep(2000);
