@@ -235,11 +235,17 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
 
             _promise.reject(this.getClass().getSimpleName(), uriSyntaxException);
         } catch (IOException ioException) {
-            String message = "There was a problem connecting to the IOT Hub. " + ioException.getMessage();
             emitHelper.logError(getReactContext(), ioException);
+            String message = "There was a problem connecting to the IOT Hub. " + ioException.getMessage();
             Log.e(this.getClass().getSimpleName(), message, ioException);
 
             _promise.reject(this.getClass().getSimpleName(), ioException);
+        } catch (InterruptedException interruptedException) {
+            emitHelper.logError(getReactContext(), interruptedException);
+            String message = "connecting to the IOT Hub was interrupted. " + interruptedException.getMessage();
+            Log.e(this.getClass().getSimpleName(), message, interruptedException);
+
+            _promise.reject(this.getClass().getSimpleName(), interruptedException);
         }
     }
 
@@ -448,7 +454,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
         }
     }
 
-    private void openClientConnection() throws URISyntaxException, IOException {
+    private void openClientConnection() throws URISyntaxException, IOException, InterruptedException {
         if (client != null && hasInternetConnection()) {
             emitHelper.log(getReactContext(), "startClient");
             try {
