@@ -247,7 +247,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
 
 
     ////--------------------------------------------------- Disconnect -------------------------------------------------////
-    private void Disconnect() {
+    private void Disconnect() throws IOException {
         if (client != null && clientIsConnected) {
             clientBusy = true;
             emitHelper.debug(getReactContext(), "Connection Close Started");
@@ -353,26 +353,35 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
         }
     }
 
-    private void OpenConnectionToIotHub() throws IOException {
-        try {
-            new Thread() {
-                public void run() {
+    private void OpenConnectionToIotHub() throws IOException, InterruptedException {
+        Exception exception = null;
+        new Thread() {
+            public void run() {
+                try {
                     client.open();
+                } catch (Exception e) {
+                    if (StringUtils.containsIgnoreCase(ExceptionUtils.getRootCauseMessage(e), "TransportException: Timed out waiting to connect to service") && _shouldRetry) {
+                        try {
+                            Thread.sleep(2000);
+                            _shouldRetry = false;
+                            OpenConnectionToIotHub();
+                        } catch (InterruptedException ie)
+                        emitHelper.logError(getReactContext(), ie);
+                        System.err.println("Exception while opening IoTHub connection: " + ie.getMessage());
+                        client.closeNow();
+                        clientBusy = false;
+                        exception = ie;
+                    } else {
+                        emitHelper.logError(getReactContext(), e);
+                        System.err.println("Exception while opening IoTHub connection: " + e.getMessage());
+                        client.closeNow();
+                        clientBusy = false;
+                        exception = e;
+                    }
                 }
-            }.start();
-        } catch (Exception e) {
-            if (StringUtils.containsIgnoreCase(ExceptionUtils.getRootCauseMessage(e), "TransportException: Timed out waiting to connect to service") && _shouldRetry) {
-                Thread.sleep(2000);
-                _shouldRetry = false;
-                OpenConnectionToIotHub();
-            } else {
-                emitHelper.logError(getReactContext(), e);
-                System.err.println("Exception while opening IoTHub connection: " + e.getMessage());
-                client.closeNow();
-                clientBusy = false;
-                throw e;
             }
-        }
+        }.start();
+        if (exception) throw exception;
     }
 
     ////--------------------------------------------------- Setup Device Method ----------------------------------------////
@@ -446,7 +455,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     private boolean twinIsStarted = false;
     private static AtomicBoolean Succeed = new AtomicBoolean(false);
 
-    private void StartDeviceTwin() throws IOException {
+    private void StartDeviceTwin() throws IOException, InterruptedException {
         emitHelper.log(getReactContext(), "Start Device Twin");
         Succeed.set(false);
 
