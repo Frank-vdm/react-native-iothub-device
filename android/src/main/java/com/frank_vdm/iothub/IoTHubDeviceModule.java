@@ -258,13 +258,23 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     }
 
     private void CloseConnectionToIotHub() throws IOException {
+        Exception exception = null;
         new Thread() {
             public void run() {
-                client.closeNow();
+                exception = DisconnectRunnable();
             }
         }.start();
+        if (exception != null) throw exception;
     }
 
+    private Exception DisconnectRunnable() {
+        try {
+            client.closeNow();
+            return null;
+        } catch (Exception e) {
+            return e;
+        }
+    }
 
     ////--------------------------------------------------- Setup Client -----------------------------------------------////
     ////----------------------------------------------------------------------------------------------------------------////
