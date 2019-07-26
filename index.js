@@ -12,7 +12,7 @@ export const {IoTHubDeviceModule} = NativeModules;
  * @param shouldRetry
  * @returns {Promise}
  */
-export async function initializeToHub(connectionString, desiredPropertySubscriptions, onConnectionStatusChange, onDeviceTwinPropertyRetrieved, onMessageReceived, onDeviceTwinStatusCallback, onEventCallback, shouldRetry = true) {
+export async function initializeIotHub(connectionString, desiredPropertySubscriptions, onConnectionStatusChange, onDeviceTwinPropertyRetrieved, onMessageReceived, onDeviceTwinStatusCallback, onEventCallback, shouldRetry = true) {
     new NativeEventEmitter(IoTHubDeviceModule).addListener('onDesiredPropertyUpdate', (event) => {
         if (event.propertyJson) {
             const property = JSON.parse(event.propertyJson);
