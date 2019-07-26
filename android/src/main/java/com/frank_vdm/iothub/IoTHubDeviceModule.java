@@ -146,7 +146,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
 
         public void run() {
             emitHelper.log(getReactContext(), "IotHubDeviceClient Start");
-            connectToHub();
+            connectToIotHub();
             emitHelper.log(getReactContext(), "IotHubDeviceClient End");
         }
     }
@@ -154,7 +154,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     //NON-THREADING
     protected void ExecuteConnection() {
         emitHelper.log(getReactContext(), "ExecuteConnection Start");
-        connectToHub();
+        connectToIotHub();
         emitHelper.log(getReactContext(), "ExecuteConnection End");
     }
 
@@ -384,7 +384,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     private void SetupDeviceMethod() throws IOException {
         emitHelper.log(getReactContext(), "Setup Device Method");
 
-        if (client != null && ClientIsConnected && !deviceMethodIsSetup) {
+        if (client != null && clientIsConnected && !deviceMethodIsSetup) {
             clientBusy = true;
             client.subscribeToDeviceMethod(new SampleDeviceMethodCallback(), null, new DeviceMethodStatusCallback(), null);
             deviceMethodIsSetup = true;
@@ -397,14 +397,14 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     private static final int METHOD_SUCCESS = 200;
     private static final int METHOD_NOT_DEFINED = 404;
 
-    private static int method_command(Object command) {
+    private int method_command(Object command) {
         System.out.println("invoking command on this device");
         emitHelper.log(getReactContext(), "invoking command on this device");
         // Insert code to invoke command here
         return METHOD_SUCCESS;
     }
 
-    private static int method_default(Object data) {
+    private int method_default(Object data) {
         System.out.println("invoking default method for this device");
         emitHelper.log(getReactContext(), "invoking default method for this device");
         // Insert device specific code here
@@ -450,7 +450,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
         emitHelper.log(getReactContext(), "Start Device Twin");
         Succeed.set(false);
 
-        if (client != null && ClientIsConnected && !twinIsStarted) {
+        if (client != null && clientIsConnected && !twinIsStarted) {
             clientBusy = true;
             client.startDeviceTwin(new DeviceTwinStatusCallback(), null, new onPropertyCallback(), null);
 
@@ -578,8 +578,10 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void sendMessage(ReadableArray properties, String eventMessage, Promise promise) {
         try {
-            if (client != null && hasInternetConnection()) {
+            if (client != null && !clientIsConnected && hasInternetConnection()) {
                 Connect();
+            }
+            if (client != null && hasInternetConnection()) {
                 Message sendMessage = CreateMessageToSend(properties, eventMessage);
                 EventCallback eventCallback = new EventCallback();
                 client.sendEventAsync(sendMessage, eventCallback, msgSentCount);
