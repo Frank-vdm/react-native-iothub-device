@@ -26,6 +26,16 @@ public class EmitHelper {
                 .emit("log", params);
     }
 
+    public void debug(ReactContext reactContext,
+                    String message) {
+        WritableMap params = Arguments.createMap();
+        params.putString("message", message);
+        reactContext
+                .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+                .emit("debug", params);
+    }
+
+
     public void logError(ReactContext reactContext,
                          Exception exception) {
         WritableMap params = Arguments.createMap();
