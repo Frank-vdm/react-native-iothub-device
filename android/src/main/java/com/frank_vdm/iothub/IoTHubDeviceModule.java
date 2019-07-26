@@ -117,27 +117,27 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     protected Promise _promise;
     protected boolean _shouldRetry = true;
 
-    @ReactMethod
-    public void connectToHub(String connectionString, ReadableArray desiredPropertySubscriptions, Boolean shouldRetry, Boolean useTreading, Promise promise) {
-        _connectionString = connectionString;
-        _desiredPropertySubscriptions = desiredPropertySubscriptions;
-        _promise = promise;
-
-        if (shouldRetry != null) {
-            _shouldRetry = shouldRetry;
-        }
-        if (hasInternetConnection()) {
-            if (useTreading) {
-                Thread t = new Thread(new IotHubDeviceClient());
-                t.start();
-            } else {
-                ExecuteConnection();
-            }
-        } else {
-            emitHelper.log(getReactContext(), "no network connection");
-            promise.resolve("no network connection");
-        }
-    }
+//    @ReactMethod
+//    public void connectToHub(String connectionString, ReadableArray desiredPropertySubscriptions, Boolean shouldRetry, Boolean useTreading, Promise promise) {
+//        _connectionString = connectionString;
+//        _desiredPropertySubscriptions = desiredPropertySubscriptions;
+//        _promise = promise;
+//
+//        if (shouldRetry != null) {
+//            _shouldRetry = shouldRetry;
+//        }
+//        if (hasInternetConnection()) {
+//            if (useTreading) {
+//                Thread t = new Thread(new IotHubDeviceClient());
+//                t.start();
+//            } else {
+//                ExecuteConnection();
+//            }
+//        } else {
+//            emitHelper.log(getReactContext(), "no network connection");
+//            promise.resolve("no network connection");
+//        }
+//    }
 
     //THREADING
     class IotHubDeviceClient implements Runnable {
@@ -220,7 +220,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
 
 
     @ReactMethod
-    public void initilizeIotHubClient(String connectionString, Promise promise){
+    public void initilizeIotHubClient(String connectionString, Promise promise) {
         try {
             client = new DeviceClient(connectionString, IotHubClientProtocol.AMQPS_WS);
             client.registerConnectionStatusChangeCallback(new ConnectionChangedCallback(), null);
@@ -240,14 +240,17 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void connectToHub(Promise promise) {
-        if(client != null){
-            Connect();
-            promise.resolve("IOT Hub Connected");
-        }else{
-            promise.resolve("IOT Hub Client NOT Initialized!");
+        if (hasInternetConnection()) {
+            if (client != null) {
+                Connect();
+                promise.resolve("IOT Hub Connected");
+            } else {
+                promise.resolve("IOT Hub Client NOT Initialized!");
+            }
+        } else {
+            promise.resolve("no network connection");
         }
     }
-
 
 
     ////--------------------------------------------------- @ReactMethod -----------------------------------------------////
@@ -324,12 +327,12 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     private void SetupClient() throws URISyntaxException {
         emitHelper.log(getReactContext(), "Setting up IOT Hub Client");
 
-       // if (client == null) {
-            emitHelper.debug(getReactContext(), "Initialize new Device Client");
-            client = new DeviceClient(_connectionString, IotHubClientProtocol.AMQPS_WS);
-            emitHelper.debug(getReactContext(), "Initialize new Device Client");
-            clientIsSetup = false;
-       // }
+        // if (client == null) {
+        emitHelper.debug(getReactContext(), "Initialize new Device Client");
+        client = new DeviceClient(_connectionString, IotHubClientProtocol.AMQPS_WS);
+        emitHelper.debug(getReactContext(), "Initialize new Device Client");
+        clientIsSetup = false;
+        // }
 
         if (client != null && clientIsSetup) {
             emitHelper.debug(getReactContext(), "Seting up Connection Status Change Callback");
