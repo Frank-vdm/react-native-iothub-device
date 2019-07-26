@@ -249,7 +249,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     public boolean clientBusy = false;
     private boolean clientIsSetup = false;
 
-    private void InitClient() throws URISyntaxException, IOException {
+    private void InitClient() throws URISyntaxException, IOException, InterruptedException {
         try {
 
             WaitFor(clientBusy);
@@ -308,7 +308,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
         }
     }
 
-    private void WaitFor(boolean waitable) {
+    private void WaitFor(boolean waitable) throws InterruptedException {
         do {
             Thread.sleep(1000);
         }
