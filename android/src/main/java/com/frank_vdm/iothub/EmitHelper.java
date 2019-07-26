@@ -42,9 +42,6 @@ public class EmitHelper {
         params.putString("exception", exception.toString());
         params.putString("message", exception.getMessage());
         params.putString("cause", exception.getCause().toString());
-        params.putString("stacktrace", exception.getStackTrace().toString());
-        params.putString("filledstacktrace", exception.fillInStackTrace().toString());
-
 
         reactContext
                 .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
