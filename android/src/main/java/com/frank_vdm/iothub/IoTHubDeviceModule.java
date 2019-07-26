@@ -366,7 +366,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
                 try {
                     client.open();
                 } catch (IOException ioException) {
-                    if (StringUtils.containsIgnoreCase(ExceptionUtils.getRootCauseMessage(e), "TransportException: Timed out waiting to connect to service") && _shouldRetry) {
+                    if (StringUtils.containsIgnoreCase(ExceptionUtils.getRootCauseMessage(ioException), "TransportException: Timed out waiting to connect to service") && _shouldRetry) {
                         try {
                             Thread.sleep(2000);
                             _shouldRetry = false;
