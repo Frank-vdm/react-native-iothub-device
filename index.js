@@ -1,5 +1,7 @@
 import {NativeEventEmitter, NativeModules} from 'react-native';
+
 export const {IoTHubDeviceModule} = NativeModules;
+
 /**
  * Returns Promise so you can await
  *
@@ -10,9 +12,9 @@ export const {IoTHubDeviceModule} = NativeModules;
  * @param shouldRetry
  * @returns {Promise}
  */
-export async function connectToHub(connectionString, desiredPropertySubscriptions, onConnectionStatusChange, onDeviceTwinPropertyRetrieved, onMessageReceived, onDeviceTwinStatusCallback, onEventCallback, shouldRetry = true){
+export async function initializeToHub(connectionString, desiredPropertySubscriptions, onConnectionStatusChange, onDeviceTwinPropertyRetrieved, onMessageReceived, onDeviceTwinStatusCallback, onEventCallback, shouldRetry = true) {
     new NativeEventEmitter(IoTHubDeviceModule).addListener('onDesiredPropertyUpdate', (event) => {
-        if(event.propertyJson){
+        if (event.propertyJson) {
             const property = JSON.parse(event.propertyJson);
             onDesiredPropertyUpdate(property.property);
         }
@@ -26,10 +28,10 @@ export async function connectToHub(connectionString, desiredPropertySubscription
      * All properties retrieved when first connected, and retrieved when an update is made remotely.
      */
     new NativeEventEmitter(IoTHubDeviceModule).addListener('onDeviceTwinPropertyRetrieved', (event) => {
-        if(event && event.propertyJson){
+        if (event && event.propertyJson) {
             try {
                 onDeviceTwinPropertyRetrieved(JSON.parse(event.propertyJson));
-            }catch (error){
+            } catch (error) {
                 console.error(error);
             }
         }
@@ -51,25 +53,32 @@ export async function connectToHub(connectionString, desiredPropertySubscription
     });
 
     new NativeEventEmitter(IoTHubDeviceModule).addListener('log', (event) => {
-        console.log("IOT HUB INTERNAL LOG:",event.message);
+        console.log("IOT HUB INTERNAL LOG:", event.message);
     });
 
     new NativeEventEmitter(IoTHubDeviceModule).addListener('debug', (event) => {
-        console.log("IOT HUB INTERNAL DEBUG LOG:",event.message);
+        console.log("IOT HUB INTERNAL DEBUG LOG:", event.message);
     });
 
-     new NativeEventEmitter(IoTHubDeviceModule).addListener('error', (event) => {
-            console.log("IOT HUB INTERNAL ERROR:", event);
-        });
+    new NativeEventEmitter(IoTHubDeviceModule).addListener('error', (event) => {
+        console.log("IOT HUB INTERNAL ERROR:", event);
+    });
 
-    return IoTHubDeviceModule.connectToHub(connectionString, desiredPropertySubscriptions, shouldRetry, true);
+    return await IoTHubDeviceModule.initilizeIotHubClient(connectionString);
+
+
+    // return IoTHubDeviceModule.connectToHub(connectionString, desiredPropertySubscriptions, shouldRetry, true);
 }
 
-export async function disconnectFromHub(){
-return IoTHubDeviceModule.disconnectFromHub();
+export async function connectToHub() {
+    return await IoTHubDeviceModule.connectToHub();
 }
 
-export async function requestTwinProperties(){
+export async function disconnectFromHub() {
+    return IoTHubDeviceModule.disconnectFromHub();
+}
+
+export async function requestTwinProperties() {
     return await IoTHubDeviceModule.requestTwinProperties();
 }
 
@@ -83,7 +92,7 @@ export async function requestTwinProperties(){
  * @param failure
  * @returns {*}
  */
-export function subscribeToTwinDesiredProperties(propertyKey, success, failure){
+export function subscribeToTwinDesiredProperties(propertyKey, success, failure) {
     return IoTHubDeviceModule.subscribeToTwinDesiredProperties(propertyKey, success, failure);
 }
 
@@ -99,7 +108,7 @@ export function reportProperties(properties) {
     Object.keys(properties).forEach(key => {
         keyValueArray.push({
             key,
-            value:properties[key]
+            value: properties[key]
         });
     });
 
@@ -109,10 +118,10 @@ export function reportProperties(properties) {
 
 /**
  * @param {Object[]} properties - Example input: {testValue:12345, testValue2:"12345", testValue3: true}
-   @param {Object} eventJson - Json object to send as a message
+ @param {Object} eventJson - Json object to send as a message
  * @returns {Promise}
  */
-export function sendMessage(properties, eventJson){
+export function sendMessage(properties, eventJson) {
     const keyValueArray = [];
     Object.keys(properties).forEach(key => {
         keyValueArray.push({

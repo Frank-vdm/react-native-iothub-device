@@ -219,6 +219,37 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     }
 
 
+    @ReactMethod
+    public void initilizeIotHubClient(String connectionString, Promise promise){
+        try {
+            client = new DeviceClient(connectionString, IotHubClientProtocol.AMQPS_WS);
+            client.registerConnectionStatusChangeCallback(new ConnectionChangedCallback(), null);
+            getReactContext().addLifecycleEventListener(new IoTHubLifecycleEventListener(this));
+            client.setMessageCallback(new MessageCallback(), null);
+            promise.resolve("IOT Hub Client Initialized!");
+
+        } catch (URISyntaxException uriSyntaxException) {
+            emitHelper.logError(getReactContext(), uriSyntaxException);
+            String message = "The connection string is Malformed. " + uriSyntaxException.getMessage();
+            Log.e(this.getClass().getSimpleName(), message, uriSyntaxException);
+
+            promise.reject(this.getClass().getSimpleName(), uriSyntaxException);
+        }
+    }
+
+
+    @ReactMethod
+    public void connectToHub(Promise promise) {
+        if(client != null){
+            Connect();
+            promise.resolve("IOT Hub Connected");
+        }else{
+            promise.resolve("IOT Hub Client NOT Initialized!");
+        }
+    }
+
+
+
     ////--------------------------------------------------- @ReactMethod -----------------------------------------------////
 ////------------------------------------------------------- Disconnect From Hub ----------------------------------------////
     ////----------------------------------------------------------------------------------------------------------------////
@@ -293,12 +324,12 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     private void SetupClient() throws URISyntaxException {
         emitHelper.log(getReactContext(), "Setting up IOT Hub Client");
 
-        if (client == null) {
+       // if (client == null) {
             emitHelper.debug(getReactContext(), "Initialize new Device Client");
             client = new DeviceClient(_connectionString, IotHubClientProtocol.AMQPS_WS);
             emitHelper.debug(getReactContext(), "Initialize new Device Client");
             clientIsSetup = false;
-        }
+       // }
 
         if (client != null && clientIsSetup) {
             emitHelper.debug(getReactContext(), "Seting up Connection Status Change Callback");
