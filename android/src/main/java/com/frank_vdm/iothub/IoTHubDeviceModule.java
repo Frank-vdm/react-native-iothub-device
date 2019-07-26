@@ -43,6 +43,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.lang.InterruptedException
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -246,42 +247,49 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     ////--------------------------------------------------- INITIALIZE -------------------------------------------------////
 ////--------------------------------------------------------------------------------------------------------------------////
     public boolean clientBusy = false;
+    private boolean clientIsSetup = false;
 
     private void InitClient() throws URISyntaxException, IOException {
-        //if (clientBusy) {
-        //    Thread.sleep(1000);
-        //} else
-        if (!clientBusy) {
+        try {
+
+            WaitFor(clientBusy);
+
             emitHelper.log(getReactContext(), "InitClient");
+            SetupClient()
+            //client = new DeviceClient(_connectionString, IotHubClientProtocol.AMQPS_WS);
             clientBusy = true;
-            client = new DeviceClient(_connectionString, IotHubClientProtocol.AMQPS_WS);
-            try {
-                SetConnectionStatusChangeCallback();
-                AddLifeCycleListener();
-                SetMessageCallback();
+            //SetConnectionStatusChangeCallback();
+            //AddLifeCycleListener();
+            //SetMessageCallback();
 
-                client.open();
+            client.open();
 
-                SubscribeToDeviceMethod();
-                Succeed.set(false);
-                StartDeviceTwin();
+            SubscribeToDeviceMethod();
 
-                do {
-                    Thread.sleep(1000);
-                }
-                while (!Succeed.get());
+            Succeed.set(false);
 
-                SubscribeToDesiredProperties();
+            StartDeviceTwin();
 
-                System.out.println("Subscribe to Desired properties on device Twin...");
-                emitHelper.log(getReactContext(), "Done");
-                clientBusy = false;
-//              } catch (Exception e) {
-//                if (StringUtils.containsIgnoreCase(ExceptionUtils.getRootCauseMessage(e), "TransportException: Timed out waiting to connect to service") && _shouldRetry) {
-//                    Thread.sleep(2000);
-//                    _shouldRetry = false;
-//                    InitClient();
-//                }
+            Waitfor(!Succeed.get());
+
+//            do {
+//                Thread.sleep(1000);
+//            }
+//            while (!Succeed.get());
+
+            SubscribeToDesiredProperties();
+
+            System.out.println("Subscribe to Desired properties on device Twin...");
+            emitHelper.log(getReactContext(), "Done");
+            clientBusy = false;
+        } catch (Exception e) {
+            if (StringUtils.containsIgnoreCase(ExceptionUtils.getRootCauseMessage(e), "TransportException: Timed out waiting to connect to service") && _shouldRetry) {
+                Thread.sleep(2000);
+                _shouldRetry = false;
+                InitClient();
+            } else {
+                throw e;
+            }
 //                else {
 //                    emitHelper.logError(getReactContext(), e);
 //                    System.err.println("Exception while opening IoTHub connection: " + e.getMessage());
@@ -290,28 +298,35 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
 //                    client = null;
 //                    System.out.println("Shutting down...");
 //                }
-            } catch (Exception e2) {
-                emitHelper.logError(getReactContext(), e2);
-                System.err.println("Exception while opening IoTHub connection: " + e2.getMessage());
-                client.closeNow();
-                clientBusy = false;
-                client = null;
-                System.out.println("Shutting down...");
-            }
+        } catch (Exception e2) {
+            emitHelper.logError(getReactContext(), e2);
+            System.err.println("Exception while opening IoTHub connection: " + e2.getMessage());
+            client.closeNow();
+            clientBusy = false;
+            client = null;
+            System.out.println("Shutting down...");
         }
-
     }
 
-//    private void OpenClientConnection() throws URISyntaxException, IOException
-//    {
-//        try{
-//            client.open();
-//        }
-//        catch{
-//
-//    }
-//
-//    }
+    private void WaitFor(boolean waitable) {
+        do {
+            Thread.sleep(1000);
+        }
+        while (waitable);
+    }
+
+
+    private void SetupClient() {
+        if (client == null) {
+            client = new DeviceClient(_connectionString, IotHubClientProtocol.AMQPS_WS);
+            SetConnectionStatusChangeCallback();
+            AddLifeCycleListener();
+            SetMessageCallback();
+            clientIsSetup = true;
+        } else {
+            emitHelper.log(getReactContext(), "client is already set up");
+        }
+    }
 
 
     ////----------------------------------------------------------------------------------------------------------------////
@@ -514,7 +529,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
         }
     }
 
-    ////----------------------------------------------------------------------------------------------------------------////
+////----------------------------------------------------------------------------------------------------------------////
 ////------------------------------------------------------- Callback Classes -------------------------------------------////
 
     protected class MessageCallback implements com.microsoft.azure.sdk.iot.device.MessageCallback {
