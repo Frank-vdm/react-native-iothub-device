@@ -257,27 +257,22 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
         }
     }
 
-    private void CloseConnectionToIotHub() throws IOException, Exception {
-        final Exception exception = null;
+    private void CloseConnectionToIotHub() throws IOException {
         new Thread() {
             public void run() {
-                exception = DisconnectRunnable();
+                try {
+                    client.closeNow();
+                    return null;
+                } catch (IOException e) {
+                    emitHelper.logError(getReactContext(), i);
+                    System.err.println("Exception while opening IoTHub connection: " + i.getMessage());
+                    clientBusy = false;
+                    _promise.reject(this.getClass().getSimpleName(), e);
+                }
             }
         }.start();
-        if (exception != null) throw exception;
     }
 
-    private Exception DisconnectRunnable() {
-        try {
-            client.closeNow();
-            return null;
-        } catch (Exception e) {
-            emitHelper.logError(getReactContext(), i);
-            System.err.println("Exception while opening IoTHub connection: " + i.getMessage());
-            clientBusy = false;
-            return e;
-        }
-    }
 
     ////--------------------------------------------------- Setup Client -----------------------------------------------////
     ////----------------------------------------------------------------------------------------------------------------////
@@ -367,42 +362,37 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     }
 
     private void OpenConnectionToIotHub() throws IOException, InterruptedException {
-        final Exception exception = null;
         new Thread() {
             public void run() {
-                exception = ConnectionWithRetry(_shouldRetry);
+                try {
+                    client.open();
+                    return null;
+                } catch (Exception e) {
+                    if (StringUtils.containsIgnoreCase(ExceptionUtils.getRootCauseMessage(e), "TransportException: Timed out waiting to connect to service") && _shouldRetry) {
+                        try {
+                            Thread.sleep(2000);
+                            _shouldRetry = false;
+                            OpenConnectionToIotHub();
+                        } catch (InterruptedException interruptedException) {
+                            emitHelper.logError(getReactContext(), interruptedException);
+                            System.err.println("Exception while opening IoTHub connection: " + interruptedException.getMessage());
+                            clientBusy = false;
+                            _promise.reject(this.getClass().getSimpleName(), interruptedException);
+                        }
+                    } else {
+                        emitHelper.logError(getReactContext(), interruptedException);
+                        System.err.println("Exception while opening IoTHub connection: " + interruptedException.getMessage());
+                        clientBusy = false;
+                        _promise.reject(this.getClass().getSimpleName(), interruptedException);
+                    }
+                } catch (IOException ioException) {
+                    emitHelper.logError(getReactContext(), ioException);
+                    System.err.println("Exception while opening IoTHub connection: " + ioException.getMessage());
+                    clientBusy = false;
+                    _promise.reject(this.getClass().getSimpleName(), ioException);
+                }
             }
         }.start();
-        if (exception != null) throw exception;
-    }
-
-    private Exception ConnectionWithRetry(boolean retry) {
-        try {
-            client.open();
-            return null;
-        } catch (Exception e) {
-            if (StringUtils.containsIgnoreCase(ExceptionUtils.getRootCauseMessage(e), "TransportException: Timed out waiting to connect to service") && retry) {
-                try {
-                    Thread.sleep(2000);
-                    return ConnectionWithRetry(false);
-                } catch (InterruptedException ie) {
-                    emitHelper.logError(getReactContext(), ie);
-                    System.err.println("Exception while opening IoTHub connection: " + ie.getMessage());
-                    clientBusy = false;
-                    return ie;
-                }
-            } else {
-                emitHelper.logError(getReactContext(), e);
-                System.err.println("Exception while opening IoTHub connection: " + e.getMessage());
-                clientBusy = false;
-                return e;
-            }
-        } catch (IOException ioException) {
-            emitHelper.logError(getReactContext(), ioException);
-            System.err.println("Exception while opening IoTHub connection: " + ioException.getMessage());
-            clientBusy = false;
-            return ioException;
-        }
     }
 
     ////--------------------------------------------------- Setup Device Method ----------------------------------------////
