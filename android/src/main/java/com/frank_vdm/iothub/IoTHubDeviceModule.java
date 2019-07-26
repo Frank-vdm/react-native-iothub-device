@@ -146,11 +146,10 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
 
         public void run() {
             emitHelper.log(getReactContext(), "IotHubDeviceClient Start");
-            try{
+            try {
                 connectToIotHub();
-            }
-            catch(Exception e){
-                emitHelper.log(getReactContext(), "IotHubDeviceClient "+ e.getMessage());
+            } catch (Exception e) {
+                emitHelper.log(getReactContext(), "IotHubDeviceClient " + e.getMessage());
             }
 
             emitHelper.log(getReactContext(), "IotHubDeviceClient End");
@@ -294,7 +293,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
 
     private void SetupClient() throws URISyntaxException {
         emitHelper.log(getReactContext(), "Setting up IOT Hub Client");
-        emitHelper.log(getReactContext(), client.toString());
+        // emitHelper.log(getReactContext(), client.toString());
 
         if (client == null) {
             emitHelper.debug(getReactContext(), "Initialize new Device Client");
