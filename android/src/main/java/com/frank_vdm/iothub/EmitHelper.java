@@ -27,7 +27,7 @@ public class EmitHelper {
     }
 
     public void debug(ReactContext reactContext,
-                    String message) {
+                      String message) {
         WritableMap params = Arguments.createMap();
         params.putString("message", message);
         reactContext
@@ -43,8 +43,7 @@ public class EmitHelper {
         params.putString("message", exception.getMessage());
         try {
             params.putString("cause", exception.getCause().toString());
-        }
-        catch{
+        } catch (Exception e) {
             //Nothing
         }
 
