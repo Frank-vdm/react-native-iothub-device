@@ -360,12 +360,12 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
         }
     }
 
-    private void OpenConnectionToIotHub() throws IOException, InterruptedException {
+    private void OpenConnectionToIotHub() {
         new Thread() {
             public void run() {
                 try {
                     client.open();
-                } catch (Exception e) {
+                } catch (IOException ioException) {
                     if (StringUtils.containsIgnoreCase(ExceptionUtils.getRootCauseMessage(e), "TransportException: Timed out waiting to connect to service") && _shouldRetry) {
                         try {
                             Thread.sleep(2000);
@@ -378,16 +378,16 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
                             _promise.reject(this.getClass().getSimpleName(), interruptedException);
                         }
                     } else {
-                        emitHelper.logError(getReactContext(), e);
-                        System.err.println("Exception while opening IoTHub connection: " + e.getMessage());
+                        emitHelper.logError(getReactContext(), ioException);
+                        System.err.println("Exception while opening IoTHub connection: " + ioException.getMessage());
                         clientBusy = false;
-                        _promise.reject(this.getClass().getSimpleName(), e);
+                        _promise.reject(this.getClass().getSimpleName(), ioException);
                     }
-                } catch (IOException ioException) {
-                    emitHelper.logError(getReactContext(), ioException);
-                    System.err.println("Exception while opening IoTHub connection: " + ioException.getMessage());
+                } catch (Exception exception) {
+                    emitHelper.logError(getReactContext(), exception);
+                    System.err.println("Exception while opening IoTHub connection: " + exception.getMessage());
                     clientBusy = false;
-                    _promise.reject(this.getClass().getSimpleName(), ioException);
+                    _promise.reject(this.getClass().getSimpleName(), exception);
                 }
             }
         }.start();
