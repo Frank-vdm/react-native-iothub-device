@@ -175,7 +175,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
             }
             while (clientBusy);
             clientBusy = true;
-            
+
             SetupClient();
             clientBusy = true;
 
@@ -288,14 +288,15 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
 
     private void SetupClient() throws URISyntaxException {
         emitHelper.log(getReactContext(), "Setting up IOT Hub Client");
+        emitHelper.log(getReactContext(), client.toString());
 
-        if (client != null) {
+        if (client == null) {
             emitHelper.debug(getReactContext(), "Initialize new Device Client");
             client = new DeviceClient(_connectionString, IotHubClientProtocol.AMQPS_WS);
             clientIsSetup = false;
         }
 
-        if (!clientIsSetup) {
+        if (client != null && clientIsSetup) {
             emitHelper.debug(getReactContext(), "Seting up Connection Status Change Callback");
             client.registerConnectionStatusChangeCallback(new ConnectionChangedCallback(), null);
 
