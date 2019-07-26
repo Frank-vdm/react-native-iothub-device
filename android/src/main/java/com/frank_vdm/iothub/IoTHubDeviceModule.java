@@ -167,7 +167,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
             do {
                 Thread.sleep(1000);
             }
-            while (clientBusy)
+            while (clientBusy);
 
             SetupClient();
             clientBusy = true;
@@ -227,14 +227,13 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
 
     public void ConnectToHub() {
         try {
-            Connect()
+            Connect();
             _promise.resolve("Successfully connected!");
         } catch (Exception e) {
             emitHelper.logError(getReactContext(), e);
             _promise.reject(this.getClass().getSimpleName(), e);
         }
     }
-}
 
     public void DisconnectFromHub() {
         try {
@@ -299,32 +298,32 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
         }
     }
 
-//TODO MAYBE MOVE INTO A SEPERATE FILE
-protected class ConnectionChangedCallback implements com.microsoft.azure.sdk.iot.device.IotHubConnectionStatusChangeCallback {
-    @Override
-    public void execute(IotHubConnectionStatus status, IotHubConnectionStatusChangeReason statusChangeReason, Throwable throwable, Object callbackContext) {
-        Log.d(this.getClass().getSimpleName(), "status: " + status + " reason: " + statusChangeReason);
-        WritableMap params = Arguments.createMap();
-        params.putString("status", status.name());
-        params.putString("statusChangeReason", statusChangeReason.name());
-        clientIsConnected = status.name() == 'CONNECTED';
-        emitHelper.emit(getReactContext(), "onConnectionStatusChange", params);
+    //TODO MAYBE MOVE INTO A SEPERATE FILE
+    protected class ConnectionChangedCallback implements com.microsoft.azure.sdk.iot.device.IotHubConnectionStatusChangeCallback {
+        @Override
+        public void execute(IotHubConnectionStatus status, IotHubConnectionStatusChangeReason statusChangeReason, Throwable throwable, Object callbackContext) {
+            Log.d(this.getClass().getSimpleName(), "status: " + status + " reason: " + statusChangeReason);
+            WritableMap params = Arguments.createMap();
+            params.putString("status", status.name());
+            params.putString("statusChangeReason", statusChangeReason.name());
+            clientIsConnected = status.name() == 'CONNECTED';
+            emitHelper.emit(getReactContext(), "onConnectionStatusChange", params);
+        }
     }
-}
 
-//TODO MAYBE MOVE INTO A SEPERATE FILE
-protected class MessageCallback implements com.microsoft.azure.sdk.iot.device.MessageCallback {
-    @Override
-    public IotHubMessageResult execute(Message message, Object context) {
-        String messageString = new String(message.getBytes(), Message.DEFAULT_IOTHUB_MESSAGE_CHARSET);
-        Log.d(this.getClass().getSimpleName(), messageString);
-        WritableMap params = Arguments.createMap();
-        params.putString("message", messageString);
-        params.putString("messageId", message.getMessageId());
-        emitHelper.emit(getReactContext(), "onMessageReceived", params);
-        return IotHubMessageResult.COMPLETE;
+    //TODO MAYBE MOVE INTO A SEPERATE FILE
+    protected class MessageCallback implements com.microsoft.azure.sdk.iot.device.MessageCallback {
+        @Override
+        public IotHubMessageResult execute(Message message, Object context) {
+            String messageString = new String(message.getBytes(), Message.DEFAULT_IOTHUB_MESSAGE_CHARSET);
+            Log.d(this.getClass().getSimpleName(), messageString);
+            WritableMap params = Arguments.createMap();
+            params.putString("message", messageString);
+            params.putString("messageId", message.getMessageId());
+            emitHelper.emit(getReactContext(), "onMessageReceived", params);
+            return IotHubMessageResult.COMPLETE;
+        }
     }
-}
 
     private void resetClientIndicators() {
         emitHelper.debug(getReactContext(), "Resetting Client Indicators...");
@@ -412,33 +411,33 @@ protected class MessageCallback implements com.microsoft.azure.sdk.iot.device.Me
         return METHOD_NOT_DEFINED;
     }
 
-protected class SampleDeviceMethodCallback implements com.microsoft.azure.sdk.iot.device.DeviceTwin.DeviceMethodCallback {
-    @Override
-    public DeviceMethodData call(String methodName, Object methodData, Object context) {
-        DeviceMethodData deviceMethodData;
-        switch (methodName) {
-            case "command": {
-                int status = method_command(methodData);
+    protected class SampleDeviceMethodCallback implements com.microsoft.azure.sdk.iot.device.DeviceTwin.DeviceMethodCallback {
+        @Override
+        public DeviceMethodData call(String methodName, Object methodData, Object context) {
+            DeviceMethodData deviceMethodData;
+            switch (methodName) {
+                case "command": {
+                    int status = method_command(methodData);
 
-                deviceMethodData = new DeviceMethodData(status, "executed " + methodName);
-                break;
+                    deviceMethodData = new DeviceMethodData(status, "executed " + methodName);
+                    break;
+                }
+                default: {
+                    int status = method_default(methodData);
+                    deviceMethodData = new DeviceMethodData(status, "executed " + methodName);
+                }
             }
-            default: {
-                int status = method_default(methodData);
-                deviceMethodData = new DeviceMethodData(status, "executed " + methodName);
-            }
+
+            return deviceMethodData;
         }
-
-        return deviceMethodData;
     }
-}
 
-protected class DeviceMethodStatusCallback implements com.microsoft.azure.sdk.iot.device.IotHubEventCallback {
-    public void execute(IotHubStatusCode status, Object context) {
-        System.out.println("IoT Hub responded to device method operation with status " + status.name());
-        emitHelper.log(getReactContext(), "IoT Hub responded to device method operation with status " + status.name());
+    protected class DeviceMethodStatusCallback implements com.microsoft.azure.sdk.iot.device.IotHubEventCallback {
+        public void execute(IotHubStatusCode status, Object context) {
+            System.out.println("IoT Hub responded to device method operation with status " + status.name());
+            emitHelper.log(getReactContext(), "IoT Hub responded to device method operation with status " + status.name());
+        }
     }
-}
 
     ////--------------------------------------------------- Start Device Twin ------------------------------------------////
     ////----------------------------------------------------------------------------------------------------------------////
@@ -458,7 +457,7 @@ protected class DeviceMethodStatusCallback implements com.microsoft.azure.sdk.io
             do {
                 Thread.sleep(1000);
             }
-            while (!Succeed.get())
+            while (!Succeed.get());
 
             SubscribeToDesiredProperties();
             twinIsStarted = true;
@@ -466,31 +465,31 @@ protected class DeviceMethodStatusCallback implements com.microsoft.azure.sdk.io
         }
     }
 
-protected class DeviceTwinStatusCallback implements com.microsoft.azure.sdk.iot.device.IotHubEventCallback {
-    @Override
-    public void execute(IotHubStatusCode status, Object context) {
-        if ((status == IotHubStatusCode.OK) || (status == IotHubStatusCode.OK_EMPTY)) {
-            Succeed.set(true);
-        } else {
-            Succeed.set(false);
+    protected class DeviceTwinStatusCallback implements com.microsoft.azure.sdk.iot.device.IotHubEventCallback {
+        @Override
+        public void execute(IotHubStatusCode status, Object context) {
+            if ((status == IotHubStatusCode.OK) || (status == IotHubStatusCode.OK_EMPTY)) {
+                Succeed.set(true);
+            } else {
+                Succeed.set(false);
+            }
+            Log.d(this.getClass().getSimpleName(), "onDeviceTwinStatusCallback: " + status);
+            WritableMap params = Arguments.createMap();
+            params.putString("responseStatus", status.name());
+            emitHelper.emit(getReactContext(), "onDeviceTwinStatusCallback", params);
         }
-        Log.d(this.getClass().getSimpleName(), "onDeviceTwinStatusCallback: " + status);
-        WritableMap params = Arguments.createMap();
-        params.putString("responseStatus", status.name());
-        emitHelper.emit(getReactContext(), "onDeviceTwinStatusCallback", params);
+
     }
 
-}
-
-protected class onPropertyCallback implements com.microsoft.azure.sdk.iot.device.DeviceTwin.TwinPropertyCallBack {
-    @Override
-    public void TwinPropertyCallBack(Property property, Object context) {
-        Log.d(this.getClass().getSimpleName(), gson.toJson(property));
-        WritableMap params = Arguments.createMap();
-        params.putString("propertyJson", gson.toJson(property));
-        emitHelper.emit(getReactContext(), "onDeviceTwinPropertyRetrieved", params);
+    protected class onPropertyCallback implements com.microsoft.azure.sdk.iot.device.DeviceTwin.TwinPropertyCallBack {
+        @Override
+        public void TwinPropertyCallBack(Property property, Object context) {
+            Log.d(this.getClass().getSimpleName(), gson.toJson(property));
+            WritableMap params = Arguments.createMap();
+            params.putString("propertyJson", gson.toJson(property));
+            emitHelper.emit(getReactContext(), "onDeviceTwinPropertyRetrieved", params);
+        }
     }
-}
 
     private void SubscribeToDesiredProperties() throws IOException {
         emitHelper.log(getReactContext(), "Subscribing To Desired Properties");
@@ -615,26 +614,26 @@ protected class onPropertyCallback implements com.microsoft.azure.sdk.iot.device
         return newMessageToSend
     }
 
-protected class EventCallback implements IotHubEventCallback {
-    public void execute(IotHubStatusCode status, Object context) {
-        Integer i = context instanceof Integer ? (Integer) context : 0;
-        Log.d(this.getClass().getSimpleName(), "IoT Hub responded to message " + i.toString() + " with status " + status.name());
+    protected class EventCallback implements IotHubEventCallback {
+        public void execute(IotHubStatusCode status, Object context) {
+            Integer i = context instanceof Integer ? (Integer) context : 0;
+            Log.d(this.getClass().getSimpleName(), "IoT Hub responded to message " + i.toString() + " with status " + status.name());
 
-        String statusJson = status.toString();
+            String statusJson = status.toString();
 
-        if ((status == IotHubStatusCode.OK) || (status == IotHubStatusCode.OK_EMPTY)) {
-            receiptsConfirmedCount++;
-            WritableMap params = Arguments.createMap();
-            params.putString("status", statusJson);
-            params.putString("receiptsConfirmedCount", Integer.toString(receiptsConfirmedCount));
-            emitHelper.emit(getReactContext(), "onEventCallback", params);
-        } else {
-            sendFailuresCount++;
-            WritableMap params = Arguments.createMap();
-            params.putString("status", statusJson);
-            params.putString("sendFailuresCount", Integer.toString(sendFailuresCount));
-            emitHelper.emit(getReactContext(), "onEventCallback", params);
+            if ((status == IotHubStatusCode.OK) || (status == IotHubStatusCode.OK_EMPTY)) {
+                receiptsConfirmedCount++;
+                WritableMap params = Arguments.createMap();
+                params.putString("status", statusJson);
+                params.putString("receiptsConfirmedCount", Integer.toString(receiptsConfirmedCount));
+                emitHelper.emit(getReactContext(), "onEventCallback", params);
+            } else {
+                sendFailuresCount++;
+                WritableMap params = Arguments.createMap();
+                params.putString("status", statusJson);
+                params.putString("sendFailuresCount", Integer.toString(sendFailuresCount));
+                emitHelper.emit(getReactContext(), "onEventCallback", params);
+            }
         }
     }
-}
 }
