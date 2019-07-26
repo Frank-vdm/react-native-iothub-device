@@ -257,8 +257,8 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
         }
     }
 
-    private void CloseConnectionToIotHub() throws IOException {
-        Exception exception = null;
+    private void CloseConnectionToIotHub() throws IOException, Exception {
+        final Exception exception = null;
         new Thread() {
             public void run() {
                 exception = DisconnectRunnable();
@@ -272,6 +272,9 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
             client.closeNow();
             return null;
         } catch (Exception e) {
+            emitHelper.logError(getReactContext(), i);
+            System.err.println("Exception while opening IoTHub connection: " + i.getMessage());
+            clientBusy = false;
             return e;
         }
     }
@@ -348,7 +351,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     ////----------------------------------------------------------------------------------------------------------------////
     private boolean clientIsConnected = false;
 
-    private void Connect() throws IOException {
+    private void Connect() throws IOException, InterruptedException {
         if (hasInternetConnection()) {
             emitHelper.log(getReactContext(), "Openning connection To IOT Hub ");
             if (client != null && !clientIsConnected) {
@@ -364,7 +367,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     }
 
     private void OpenConnectionToIotHub() throws IOException, InterruptedException {
-        Exception exception = null;
+        final Exception exception = null;
         new Thread() {
             public void run() {
                 exception = ConnectionWithRetry(_shouldRetry);
@@ -385,17 +388,20 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
                 } catch (InterruptedException ie) {
                     emitHelper.logError(getReactContext(), ie);
                     System.err.println("Exception while opening IoTHub connection: " + ie.getMessage());
-                    client.closeNow();
                     clientBusy = false;
                     return ie;
                 }
             } else {
                 emitHelper.logError(getReactContext(), e);
                 System.err.println("Exception while opening IoTHub connection: " + e.getMessage());
-                client.closeNow();
                 clientBusy = false;
                 return e;
             }
+        } catch (IOException ioException) {
+            emitHelper.logError(getReactContext(), ioException);
+            System.err.println("Exception while opening IoTHub connection: " + ioException.getMessage());
+            clientBusy = false;
+            return ioException;
         }
     }
 
