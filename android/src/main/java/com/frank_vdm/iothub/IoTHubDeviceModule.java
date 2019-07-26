@@ -244,11 +244,14 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
             if (client != null) {
                 try {
                     Connect();
-                } catch ( IOException  ioException){
+                } catch (IOException ioException) {
                     emitHelper.logError(getReactContext(), ioException);
 //                    String message = "There was a problem connecting to the IOT Hub. " + ioException.getMessage();
-
                     promise.reject(this.getClass().getSimpleName(), ioException);
+                } catch (InterruptedException interruptedException) {
+                    emitHelper.logError(getReactContext(), interruptedException);
+//                    String message = "connecting to the IOT Hub was interrupted. " + interruptedException.getMessage();
+                    promise.reject(this.getClass().getSimpleName(), interruptedException);
                 }
                 promise.resolve("IOT Hub Connected");
             } else {
