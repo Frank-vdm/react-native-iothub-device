@@ -262,7 +262,6 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
             public void run() {
                 try {
                     client.closeNow();
-                    return null;
                 } catch (IOException e) {
                     emitHelper.logError(getReactContext(), i);
                     System.err.println("Exception while opening IoTHub connection: " + i.getMessage());
@@ -366,7 +365,6 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
             public void run() {
                 try {
                     client.open();
-                    return null;
                 } catch (Exception e) {
                     if (StringUtils.containsIgnoreCase(ExceptionUtils.getRootCauseMessage(e), "TransportException: Timed out waiting to connect to service") && _shouldRetry) {
                         try {
@@ -380,10 +378,10 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
                             _promise.reject(this.getClass().getSimpleName(), interruptedException);
                         }
                     } else {
-                        emitHelper.logError(getReactContext(), interruptedException);
-                        System.err.println("Exception while opening IoTHub connection: " + interruptedException.getMessage());
+                        emitHelper.logError(getReactContext(), e);
+                        System.err.println("Exception while opening IoTHub connection: " + e.getMessage());
                         clientBusy = false;
-                        _promise.reject(this.getClass().getSimpleName(), interruptedException);
+                        _promise.reject(this.getClass().getSimpleName(), e);
                     }
                 } catch (IOException ioException) {
                     emitHelper.logError(getReactContext(), ioException);
