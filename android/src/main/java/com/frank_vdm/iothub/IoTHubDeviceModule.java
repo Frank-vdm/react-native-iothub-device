@@ -306,7 +306,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
             WritableMap params = Arguments.createMap();
             params.putString("status", status.name());
             params.putString("statusChangeReason", statusChangeReason.name());
-            clientIsConnected = status.name() == 'CONNECTED';
+            clientIsConnected = status.name() == "CONNECTED";
             emitHelper.emit(getReactContext(), "onConnectionStatusChange", params);
         }
     }
@@ -611,7 +611,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
             sendMessage.setProperty(key, value.toString());
         }
         newMessageToSend.setMessageId(java.util.UUID.randomUUID().toString());
-        return newMessageToSend
+        return newMessageToSend;
     }
 
     protected class EventCallback implements IotHubEventCallback {
