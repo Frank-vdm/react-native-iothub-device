@@ -181,13 +181,12 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
             Connect();
             clientBusy = true;
 
-            SetupDeviceMethod();
-            clientBusy = true;
+            //SetupDeviceMethod();
+            //clientBusy = true;
 
-            StartDeviceTwin();
-            clientBusy = true;
+            //StartDeviceTwin();
+            //clientBusy = true;
 
-            System.out.println("Subscribe to Desired properties on device Twin...");
             emitHelper.log(getReactContext(), "Connection To IOT Hub Completed");
             clientBusy = false;
 
@@ -293,7 +292,6 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
 
     private void SetupClient() throws URISyntaxException {
         emitHelper.log(getReactContext(), "Setting up IOT Hub Client");
-        // emitHelper.log(getReactContext(), client.toString());
 
         if (client == null) {
             emitHelper.debug(getReactContext(), "Initialize new Device Client");
@@ -362,7 +360,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     private void Connect() throws IOException, InterruptedException {
         if (hasInternetConnection()) {
             emitHelper.log(getReactContext(), "Openning connection To IOT Hub ");
-            if (client != null && !clientIsConnected) {
+            if (client != null) {
                 clientBusy = true;
                 emitHelper.debug(getReactContext(), "Connection Open Started");
                 OpenConnectionToIotHub();
