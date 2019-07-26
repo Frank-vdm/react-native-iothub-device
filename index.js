@@ -2,16 +2,7 @@ import {NativeEventEmitter, NativeModules} from 'react-native';
 
 export const {IoTHubDeviceModule} = NativeModules;
 
-/**
- * Returns Promise so you can await
- *
- * @param connectionString
- * @param desiredPropertySubscriptions
- * @param onDesiredPropertyUpdate
- * @param onEventCallback
- * @param shouldRetry
- * @returns {Promise}
- */
+
 export async function initializeIotHub(connectionString, desiredPropertySubscriptions, onConnectionStatusChange, onDeviceTwinPropertyRetrieved, onMessageReceived, onDeviceTwinStatusCallback, onEventCallback, shouldRetry = true) {
     new NativeEventEmitter(IoTHubDeviceModule).addListener('onDesiredPropertyUpdate', (event) => {
         if (event.propertyJson) {
@@ -64,14 +55,25 @@ export async function initializeIotHub(connectionString, desiredPropertySubscrip
         console.log("IOT HUB INTERNAL ERROR:", event);
     });
 
-    return await IoTHubDeviceModule.initilizeIotHubClient(connectionString);
+    return await NativeModules.IoTHubDeviceModule.initilizeIotHubClient(connectionString);
 
 
     // return IoTHubDeviceModule.connectToHub(connectionString, desiredPropertySubscriptions, shouldRetry, true);
 }
 
+
+/**
+ * Returns Promise so you can await
+ *
+ * @param connectionString
+ * @param desiredPropertySubscriptions
+ * @param onDesiredPropertyUpdate
+ * @param onEventCallback
+ * @param shouldRetry
+ * @returns {Promise}
+ */
 export async function connectToHub() {
-    return await IoTHubDeviceModule.connectToHub();
+    return await NativeModules.IoTHubDeviceModule.connectToHub();
 }
 
 export async function disconnectFromHub() {
