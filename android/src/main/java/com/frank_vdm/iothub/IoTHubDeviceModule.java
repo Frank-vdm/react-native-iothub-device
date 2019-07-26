@@ -242,7 +242,14 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     public void connectToHub(Promise promise) {
         if (hasInternetConnection()) {
             if (client != null) {
-                Connect();
+                try {
+                    Connect();
+                } catch ( IOException  ioException){
+                    emitHelper.logError(getReactContext(), ioException);
+//                    String message = "There was a problem connecting to the IOT Hub. " + ioException.getMessage();
+
+                    promise.reject(this.getClass().getSimpleName(), ioException);
+                }
                 promise.resolve("IOT Hub Connected");
             } else {
                 promise.resolve("IOT Hub Client NOT Initialized!");
