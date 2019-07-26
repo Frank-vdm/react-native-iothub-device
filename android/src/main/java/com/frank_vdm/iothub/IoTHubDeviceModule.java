@@ -174,7 +174,8 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
                 Thread.sleep(1000);
             }
             while (clientBusy);
-
+            clientBusy = true;
+            
             SetupClient();
             clientBusy = true;
 
