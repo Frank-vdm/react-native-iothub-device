@@ -282,7 +282,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     private void SetupClient() throws URISyntaxException {
         emitHelper.log(getReactContext(), "Setting up IOT Hub Client");
 
-        if (client == null) {
+        if (client != null) {
             emitHelper.debug(getReactContext(), "Initialize new Device Client");
             client = new DeviceClient(_connectionString, IotHubClientProtocol.AMQPS_WS);
             clientIsSetup = false;

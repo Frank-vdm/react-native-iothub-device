@@ -41,7 +41,12 @@ public class EmitHelper {
         WritableMap params = Arguments.createMap();
         params.putString("exception", exception.toString());
         params.putString("message", exception.getMessage());
-        params.putString("cause", exception.getCause().toString());
+        try {
+            params.putString("cause", exception.getCause().toString());
+        }
+        catch{
+            //Nothing
+        }
 
         reactContext
                 .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
