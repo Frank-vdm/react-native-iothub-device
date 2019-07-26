@@ -610,7 +610,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
             ReadableMap map = properties.getMap(i);
             String key = map.getString("key");
             Object value = getDynamicValue(map, "value");
-            sendMessage.setProperty(key, value.toString());
+            newMessageToSend.setProperty(key, value.toString());
         }
         newMessageToSend.setMessageId(java.util.UUID.randomUUID().toString());
         return newMessageToSend;
