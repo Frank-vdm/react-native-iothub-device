@@ -270,7 +270,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
 
             StartDeviceTwin();
 
-            Waitfor(!Succeed.get());
+            WaitFor(!Succeed.get());
 
 //            do {
 //                Thread.sleep(1000);
