@@ -146,7 +146,13 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
 
         public void run() {
             emitHelper.log(getReactContext(), "IotHubDeviceClient Start");
-            connectToIotHub();
+            try{
+                connectToIotHub();
+            }
+            catch(Exception e){
+                emitHelper.log(getReactContext(), "IotHubDeviceClient "+ e.getMessage());
+            }
+
             emitHelper.log(getReactContext(), "IotHubDeviceClient End");
         }
     }
