@@ -464,8 +464,9 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
                 emitHelper.logError(getReactContext(), ioException);
                 //Log.e(this.getClass().getSimpleName(), message, ioException);
                 //promise.reject(this.getClass().getSimpleName(), ioException);
-            }
-
+            } catch (InterruptedException interruptedException)
+                String message = "There was a problem connecting to the IOT Hub. " + interruptedException.getMessage();
+                emitHelper.logError(getReactContext(), interruptedException);
 //            String OPERATING_SYSTEM = System.getProperty("os.name");
 //            client.closeNow();
 //            System.out.println("Shutting down..." + OPERATING_SYSTEM);
