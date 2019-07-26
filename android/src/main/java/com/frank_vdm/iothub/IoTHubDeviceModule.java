@@ -211,6 +211,12 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
             Log.e(this.getClass().getSimpleName(), message, interruptedException);
 
             _promise.reject(this.getClass().getSimpleName(), interruptedException);
+        } catch (Exception exception) {
+            emitHelper.logError(getReactContext(), exception);
+            String message = "connecting to the IOT Hub was interrupted. " + exception.getMessage();
+            Log.e(this.getClass().getSimpleName(), message, exception);
+
+            _promise.reject(this.getClass().getSimpleName(), exception);
         }
     }
 
@@ -293,6 +299,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
         if (client == null) {
             emitHelper.debug(getReactContext(), "Initialize new Device Client");
             client = new DeviceClient(_connectionString, IotHubClientProtocol.AMQPS_WS);
+            emitHelper.debug(getReactContext(), "Initialize new Device Client");
             clientIsSetup = false;
         }
 
