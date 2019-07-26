@@ -43,7 +43,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.lang.InterruptedException
+import java.lang.InterruptedException;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -255,7 +255,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
             WaitFor(clientBusy);
 
             emitHelper.log(getReactContext(), "InitClient");
-            SetupClient()
+            SetupClient();
             //client = new DeviceClient(_connectionString, IotHubClientProtocol.AMQPS_WS);
             clientBusy = true;
             //SetConnectionStatusChangeCallback();
