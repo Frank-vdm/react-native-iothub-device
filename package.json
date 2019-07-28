@@ -11,5 +11,8 @@
   ],
   "license": "",
   "peerDependencies": {
+  },
+  "dependencies": {
+    "react-native": "latest"
   }
 }

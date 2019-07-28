@@ -55,11 +55,11 @@ export async function connectToHub(connectionString, desiredPropertySubscription
         console.log("IOT HUB INTERNAL ERROR:", event);
     });
 
-    return IoTHubDeviceModule.connectToHub(connectionString, desiredPropertySubscriptions);
+    return NativeModules.IoTHubDeviceModule.connectToHub(connectionString, desiredPropertySubscriptions);
 }
 
 export async function disconnectFromHub() {
-    return IoTHubDeviceModule.disconnectFromHub();
+    return NativeModules.IoTHubDeviceModule.disconnectFromHub();
 }
 
 // export async function requestTwinProperties() {
