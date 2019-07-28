@@ -13,6 +13,5 @@
   "peerDependencies": {
   },
   "dependencies": {
-    "react-native": "latest"
   }
 }
