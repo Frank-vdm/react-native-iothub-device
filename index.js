@@ -55,34 +55,16 @@ export async function initializeIotHub(connectionString, desiredPropertySubscrip
         console.log("IOT HUB INTERNAL ERROR:", event);
     });
 
-    return await NativeModules.IoTHubDeviceModule.initilizeIotHubClient(connectionString);
-
-
-    // return IoTHubDeviceModule.connectToHub(connectionString, desiredPropertySubscriptions, shouldRetry, true);
-}
-
-
-/**
- * Returns Promise so you can await
- *
- * @param connectionString
- * @param desiredPropertySubscriptions
- * @param onDesiredPropertyUpdate
- * @param onEventCallback
- * @param shouldRetry
- * @returns {Promise}
- */
-export async function connectToHub() {
-    return await NativeModules.IoTHubDeviceModule.connectToHub();
+    return NativeModules.IoTHubDeviceModule.connectToHub(connectionString, desiredPropertySubscriptions);
 }
 
 export async function disconnectFromHub() {
     return IoTHubDeviceModule.disconnectFromHub();
 }
 
-export async function requestTwinProperties() {
-    return await IoTHubDeviceModule.requestTwinProperties();
-}
+// export async function requestTwinProperties() {
+//     return await IoTHubDeviceModule.requestTwinProperties();
+// }
 
 
 /**
@@ -95,7 +77,7 @@ export async function requestTwinProperties() {
  * @returns {*}
  */
 export function subscribeToTwinDesiredProperties(propertyKey, success, failure) {
-    return IoTHubDeviceModule.subscribeToTwinDesiredProperties(propertyKey, success, failure);
+    return NativeModules.IoTHubDeviceModule.subscribeToTwinDesiredProperties(propertyKey, success, failure);
 }
 
 /**
@@ -131,24 +113,8 @@ export function sendMessage(properties, eventJson) {
             value: properties[key]
         });
     });
-    message = JSON.stringify(eventJson);
+    let message = JSON.stringify(eventJson);
 
     return NativeModules.IoTHubDeviceModule.sendMessage(keyValueArray, message);
 }
 
-// /**
-//  * @param {Object[]} properties - Example input: {testValue:12345, testValue2:"12345", testValue3: true}
-//    @param {string} eventMessage - Json object to send as a message
-//  * @returns {Promise}
-//  */
-// export function sendMessage(properties, eventMessage) {
-//     const keyValueArray = [];
-//     Object.keys(properties).forEach(key => {
-//         keyValueArray.push({
-//             key,
-//             value: properties[key]
-//         });
-//     });
-
-//     return NativeModules.IoTHubDeviceModule.sendMessage(keyValueArray, eventMessage);
-// }

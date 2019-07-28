@@ -9,7 +9,7 @@ import com.facebook.react.modules.core.DeviceEventManagerModule;
 
 public class EmitHelper {
 
-    public void emit(ReactContext reactContext,
+    public static void emit(ReactContext reactContext,
                      String eventName,
                      @Nullable WritableMap params) {
         reactContext
@@ -17,7 +17,7 @@ public class EmitHelper {
                 .emit(eventName, params);
     }
 
-    public void log(ReactContext reactContext,
+    public static void log(ReactContext reactContext,
                     String message) {
         WritableMap params = Arguments.createMap();
         params.putString("message", message);
@@ -26,7 +26,7 @@ public class EmitHelper {
                 .emit("log", params);
     }
 
-    public void debug(ReactContext reactContext,
+    public static void debug(ReactContext reactContext,
                       String message) {
         WritableMap params = Arguments.createMap();
         params.putString("message", message);
@@ -36,7 +36,7 @@ public class EmitHelper {
     }
 
 
-    public void logError(ReactContext reactContext,
+    public static void logError(ReactContext reactContext,
                          Exception exception) {
         WritableMap params = Arguments.createMap();
         params.putString("exception", exception.toString());
@@ -44,6 +44,7 @@ public class EmitHelper {
         try {
             params.putString("cause", exception.getCause().toString());
         } catch (Exception e) {
+            EmitHelper.log(reactContext, "SomethignWent Wrong Logging error: "+ e.getMessage());
             //Nothing
         }
 

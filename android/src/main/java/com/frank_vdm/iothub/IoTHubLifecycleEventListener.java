@@ -11,7 +11,6 @@ import java.lang.Thread;
 public class IoTHubLifecycleEventListener implements LifecycleEventListener {
 
     private IoTHubDeviceModule _client;
-    private Promise _promise;
 
     IoTHubLifecycleEventListener(IoTHubDeviceModule client) {
         _client = client;
@@ -19,22 +18,24 @@ public class IoTHubLifecycleEventListener implements LifecycleEventListener {
 
     @Override
     public void onHostResume() {
-        Log.i(this.getClass().getSimpleName(), "onHostResume");
+        //Log.i(this.getClass().getSimpleName(), "onHostResume");
         _client.emitHelper.log(_client.getReactContext(), "onHostResume");
-        _client.ConnectToHub();
+//        if(!_client.clientIsConnected){
+//            _client.ConnectClient();
+//        }
     }
 
     @Override
     public void onHostPause() {
-        Log.i(this.getClass().getSimpleName(), "onHostPause");
+        //Log.i(this.getClass().getSimpleName(), "onHostPause");
         _client.emitHelper.log(_client.getReactContext(), "onHostPause");
-        _client.DisconnectFromHub();
+//        _client.disconnectFromHub();
     }
 
     @Override
     public void onHostDestroy() {
-        Log.i(this.getClass().getSimpleName(), "onHostDestroy");
+        //Log.i(this.getClass().getSimpleName(), "onHostDestroy");
         _client.emitHelper.log(_client.getReactContext(), "onHostDestroy");
-        _client.DisconnectFromHub();
+        //_client.DisconnectFromHub();
     }
 }
