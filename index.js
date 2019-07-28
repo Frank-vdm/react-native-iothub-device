@@ -54,13 +54,13 @@ export async function connectToHub(connectionString, desiredPropertySubscription
     new NativeEventEmitter(IoTHubDeviceModule).addListener('error', (event) => {
         console.log("IOT HUB INTERNAL ERROR:", event);
     });
-    console.log('test', NativeModules.IoTHubDeviceModule);
+    console.log('test', IoTHubDeviceModule);
 
-    return NativeModules.IoTHubDeviceModule.connectToHub(connectionString, desiredPropertySubscriptions);
+    return await IoTHubDeviceModule.connectToHub(connectionString, desiredPropertySubscriptions);
 }
 
 export async function disconnectFromHub() {
-    return NativeModules.IoTHubDeviceModule.disconnectFromHub();
+    return await IoTHubDeviceModule.disconnectFromHub();
 }
 
 // export async function requestTwinProperties() {
@@ -78,7 +78,7 @@ export async function disconnectFromHub() {
  * @returns {*}
  */
 export function subscribeToTwinDesiredProperties(propertyKey, success, failure) {
-    return NativeModules.IoTHubDeviceModule.subscribeToTwinDesiredProperties(propertyKey, success, failure);
+    return IoTHubDeviceModule.subscribeToTwinDesiredProperties(propertyKey, success, failure);
 }
 
 /**
@@ -97,7 +97,7 @@ export function reportProperties(properties) {
         });
     });
 
-    return NativeModules.IoTHubDeviceModule.sendReportedProperties(keyValueArray);
+    return IoTHubDeviceModule.sendReportedProperties(keyValueArray);
 }
 
 
@@ -116,6 +116,6 @@ export function sendMessage(properties, eventJson) {
     });
     let message = JSON.stringify(eventJson);
 
-    return NativeModules.IoTHubDeviceModule.sendMessage(keyValueArray, message);
+    return IoTHubDeviceModule.sendMessage(keyValueArray, message);
 }
 
