@@ -8,11 +8,11 @@ import com.frank_vdm.iothub.IoTHubDeviceModule;
 
 import java.lang.Thread;
 
-public class IoTHubLifeCycleEventListener implements LifecycleEventListener {
+public class IoTHubLifecycleEventListener implements LifecycleEventListener {
 
     private IoTHubDeviceModule _client;
 
-    IoTHubLifeCycleEventListener(IoTHubDeviceModule client) {
+    IoTHubLifecycleEventListener(IoTHubDeviceModule client) {
         _client = client;
     }
 

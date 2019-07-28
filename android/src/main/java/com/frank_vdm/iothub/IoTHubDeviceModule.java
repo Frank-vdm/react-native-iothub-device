@@ -335,7 +335,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     ////--------------------------------------------------- Send Message -----------------------------------------------////
     private int msgSentCount = 0;
     private static final int D2C_MESSAGE_TIMEOUT = 2000; // 2 seconds
-    public static List failedMessageListOnClose = new ArrayList(); // List of messages that failed on close
+    public static List<Message> failedMessageListOnClose = new ArrayList<Message>(); // List of messages that failed on close
 
     @ReactMethod
     public void sendMessage(ReadableArray properties, String eventMessage, Promise promise) {
