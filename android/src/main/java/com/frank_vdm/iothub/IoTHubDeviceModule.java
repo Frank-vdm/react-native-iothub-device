@@ -51,6 +51,8 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.lang.Thread;
+import java.util.ArrayList;
+import java.util.List;
 
 public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
 
@@ -107,7 +109,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
             onDesiredPropertyUpdate = new CallbackDesiredPropertyUpdate(this, getReactApplicationContext());
             onDeviceMethodCall = new CallbackDeviceMethod(this, getReactApplicationContext());
             onDeviceMethodStatus = new CallbackDeviceMethodStatus(this, getReactApplicationContext());
-            onDeviceTwinPropertyRetrieved = newCallbackDeviceTwinPropertyRetrieved(this, getReactApplicationContext());
+            onDeviceTwinPropertyRetrieved = new CallbackDeviceTwinPropertyRetrieved(this, getReactApplicationContext());
             onDeviceTwinStatusChange = new CallbackDeviceTwinStatusChange(this, getReactApplicationContext());
             onMessageReceived = new CallbackMessageReceived(this, getReactApplicationContext());
             onMessageSent = new CallbackMessageSent(this, getReactApplicationContext());
@@ -218,12 +220,12 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
             return ConnectionResult.CONNECTION_OPEN;
         } else {
             EmitHelper.log(getReactContext(), "No Network Connection");
-            return ConnectionResult.CONNECTION_UNAVAILIBLE;
+            return ConnectionResult.CONNECTION_UNAVAILABLE;
         }
     }
 
     private void SubscribeCallbacks(ReadableArray desiredPropertySubscriptions) {
-        client.setMessageCallback(onMessageRecieved, null);
+        client.setMessageCallback(onMessageReceived, null);
         // client.subscribeToDeviceMethod(onDeviceMethodCall, null, onDeviceMehtodstatus, null);
         // StartDeviceTwin();
         // SubscribeToDesiredProperties(desiredPropertySubscriptions);
@@ -247,13 +249,13 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     }
 
     private void SubscribeToDesiredProperties(ReadableArray desiredPropertySubscriptions) {
-        HashMap subscriptions = CreateSubscriptions(desiredPropertySubscriptions);
+        Map<Property,Pair<TwinPropertyCallBack,Object>> subscriptions = CreateSubscriptions(desiredPropertySubscriptions);
         if (!subscriptions.isEmpty()) {
             client.subscribeToTwinDesiredProperties(subscriptions);
         }
     }
 
-    private HashMap CreateSubscriptions(ReadableArray desiredPropertySubscriptions) {
+    private Map<Property,Pair<TwinPropertyCallBack,Object>> CreateSubscriptions(ReadableArray desiredPropertySubscriptions) {
         if (desiredPropertySubscriptions == null || desiredPropertySubscriptions.size() == 0) {
             return null;
         } else {
