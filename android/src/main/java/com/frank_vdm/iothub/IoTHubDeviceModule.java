@@ -132,6 +132,8 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
                 }
                 promise.resolve("Success");
             } catch (Exception e) {
+                String temp = ExceptionUtils.getRootCauseMessage(e);
+                EmitHelper.log(getReactContext(), temp);
                 EmitHelper.logError(getReactContext(), e);
                 promise.reject(this.getClass().getSimpleName(), e);
             }
@@ -187,7 +189,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
             String message = "The connection string is Malformed. " + uriSyntaxException.getMessage();
             EmitHelper.log(getReactContext(), message);
             return null;
-        } catch (IOException ioException){
+        } catch (IOException ioException) {
             EmitHelper.logError(getReactContext(), ioException);
             String message = "Error Connecting to the hub. " + ioException.getMessage();
             EmitHelper.log(getReactContext(), message);
@@ -254,7 +256,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
         }
     }
 
-    private void SubscribeToDesiredProperties(ReadableArray desiredPropertySubscriptions) {
+    private void SubscribeToDesiredProperties(ReadableArray desiredPropertySubscriptions) throws IOException {
         Map<Property, Pair<TwinPropertyCallBack, Object>> subscriptions = CreateSubscriptions(desiredPropertySubscriptions);
         if (!subscriptions.isEmpty()) {
             client.subscribeToTwinDesiredProperties(subscriptions);
