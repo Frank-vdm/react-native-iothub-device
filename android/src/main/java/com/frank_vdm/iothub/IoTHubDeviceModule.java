@@ -121,7 +121,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
         if (hasInternetConnection()) {
             try {
                 if (client == null) {
-                    client = CreateIotHubClient(connectionString, desiredPropertySubscriptions);\
+                    client = CreateIotHubClient(connectionString, desiredPropertySubscriptions);
                     EmitHelper.log(getReactContext(), "Client Created");
 
                 } else {
@@ -141,7 +141,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
         try {
             client.closeNow();
             EmitHelper.log(getReactContext(), "Client Closed");
-        } catch {
+        } catch (Exception e) {
             EmitHelper.logError(getReactContext(), e);
         }
     }
@@ -279,17 +279,15 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
         if (canInteractWithHub()) {
             EmitHelper.log(getReactContext(), "Send Reported Property");
             try {
-                try {
-                    Property property = new Property(input.getString("key"), getDynamicValue(input, "value"));
-                    client.sendReportedProperties(Sets.newHashSet(property));
-                    if (success != null) {
-                        success.invoke();
-                    }
-                } catch (IOException e) {
-                    Log.e(this.getClass().getSimpleName(), e.getMessage(), e);
-                    if (failure != null) {
-                        failure.invoke(e.getMessage());
-                    }
+                Property property = new Property(input.getString("key"), getDynamicValue(input, "value"));
+                client.sendReportedProperties(Sets.newHashSet(property));
+                if (success != null) {
+                    success.invoke();
+                }
+            } catch (IOException e) {
+                Log.e(this.getClass().getSimpleName(), e.getMessage(), e);
+                if (failure != null) {
+                    failure.invoke(e.getMessage());
                 }
             }
         }
