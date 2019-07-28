@@ -186,6 +186,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
             EmitHelper.logError(getReactContext(), uriSyntaxException);
             String message = "The connection string is Malformed. " + uriSyntaxException.getMessage();
             EmitHelper.log(getReactContext(), message);
+            return null;
         }
     }
 
@@ -249,13 +250,13 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     }
 
     private void SubscribeToDesiredProperties(ReadableArray desiredPropertySubscriptions) {
-        Map<Property,Pair<TwinPropertyCallBack,Object>> subscriptions = CreateSubscriptions(desiredPropertySubscriptions);
+        Map<Property, Pair<TwinPropertyCallBack, Object>> subscriptions = CreateSubscriptions(desiredPropertySubscriptions);
         if (!subscriptions.isEmpty()) {
             client.subscribeToTwinDesiredProperties(subscriptions);
         }
     }
 
-    private Map<Property,Pair<TwinPropertyCallBack,Object>> CreateSubscriptions(ReadableArray desiredPropertySubscriptions) {
+    private Map<Property, Pair<TwinPropertyCallBack, Object>> CreateSubscriptions(ReadableArray desiredPropertySubscriptions) {
         if (desiredPropertySubscriptions == null || desiredPropertySubscriptions.size() == 0) {
             return null;
         } else {
