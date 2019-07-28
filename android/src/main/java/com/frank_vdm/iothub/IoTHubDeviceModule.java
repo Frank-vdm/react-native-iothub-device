@@ -113,7 +113,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
             onDeviceTwinStatusChange = new CallbackDeviceTwinStatusChange(this, getReactApplicationContext());
             onMessageReceived = new CallbackMessageReceived(this, getReactApplicationContext());
             onMessageSent = new CallbackMessageSent(this, getReactApplicationContext());
-            getReactContext().addLifecycleEventListener(new IoTHubLifeCycleEventListener(this));
+            getReactContext().addLifecycleEventListener(new IoTHubLifecycleEventListener(this));
             callbacksAreInitialized.set(true);
         }
     }
@@ -335,7 +335,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     ////--------------------------------------------------- Send Message -----------------------------------------------////
     private int msgSentCount = 0;
     private static final int D2C_MESSAGE_TIMEOUT = 2000; // 2 seconds
-    public static List<Message> failedMessageListOnClose = new ArrayList<Message>(); // List of messages that failed on close
+    public static List<String> failedMessageListOnClose = new ArrayList<String>(); // List of messages that failed on close
 
     @ReactMethod
     public void sendMessage(ReadableArray properties, String eventMessage, Promise promise) {
