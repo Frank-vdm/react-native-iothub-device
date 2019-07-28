@@ -187,6 +187,11 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
             String message = "The connection string is Malformed. " + uriSyntaxException.getMessage();
             EmitHelper.log(getReactContext(), message);
             return null;
+        } catch (IOException ioException){
+            EmitHelper.logError(getReactContext(), ioException);
+            String message = "Error Connecting to the hub. " + ioException.getMessage();
+            EmitHelper.log(getReactContext(), message);
+            return null;
         }
     }
 
@@ -234,7 +239,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
 
     public static AtomicBoolean twinIsStarted = new AtomicBoolean(false);
 
-    private boolean StartDeviceTwin() {
+    private void StartDeviceTwin() throws IOException {
         twinIsStarted.set(false);
         client.startDeviceTwin(onDeviceTwinStatusChange, null, onDeviceTwinPropertyRetrieved, null);
         try {
