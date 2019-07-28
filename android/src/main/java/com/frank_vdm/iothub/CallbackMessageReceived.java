@@ -52,13 +52,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.lang.Thread;
 
-public class CallbackMessageRecieved implements com.microsoft.azure.sdk.iot.device.MessageCallback {
+public class CallbackMessageReceived implements com.microsoft.azure.sdk.iot.device.MessageCallback {
 
     private ReactContext reactContext;
     private IoTHubDeviceModule module;
     private Gson gson = new Gson();
 
-    public CallbackMessageRecieved(IoTHubDeviceModule module, ReactContext context){
+    public CallbackMessageReceived(IoTHubDeviceModule module, ReactContext context){
         super();
         this.module = module;
         this.reactContext = context;

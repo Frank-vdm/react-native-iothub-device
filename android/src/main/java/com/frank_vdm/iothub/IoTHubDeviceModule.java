@@ -60,10 +60,10 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     private CallbackConnectionChange onConnectionChange;
     private CallbackDesiredPropertyUpdate onDesiredPropertyUpdate;
     private CallbackDeviceMethod onDeviceMethodCall;
-    private CallbackDeviceMethodStatus onDeviceMehtodstatus;
+    private CallbackDeviceMethodStatus onDeviceMethodStatus;
     private CallbackDeviceTwinPropertyRetrieved onDeviceTwinPropertyRetrieved;
     private CallbackDeviceTwinStatusChange onDeviceTwinStatusChange;
-    private CallbackMessageRecieved onMessageRecieved;
+    private CallbackMessageReceived onMessageReceived;
     private CallbackMessageSent onMessageSent;
 
     //Constructor
@@ -99,20 +99,20 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
         }
     }
 
-    private static AtomicBoolean callbacksAreInitilized = new AtomicBoolean(false);
+    private static AtomicBoolean callbacksAreInitialized = new AtomicBoolean(false);
 
     private void InitCallbacks() {
-        if (!callbacksAreInitilized.get()) {
+        if (!callbacksAreInitialized.get()) {
             onConnectionChange = new CallbackConnectionChange(this, getReactApplicationContext());
             onDesiredPropertyUpdate = new CallbackDesiredPropertyUpdate(this, getReactApplicationContext());
             onDeviceMethodCall = new CallbackDeviceMethod(this, getReactApplicationContext());
-            onDeviceMehtodstatus = new CallbackDeviceMethodStatus(this, getReactApplicationContext());
+            onDeviceMethodStatus = new CallbackDeviceMethodStatus(this, getReactApplicationContext());
             onDeviceTwinPropertyRetrieved = newCallbackDeviceTwinPropertyRetrieved(this, getReactApplicationContext());
             onDeviceTwinStatusChange = new CallbackDeviceTwinStatusChange(this, getReactApplicationContext());
-            onMessageRecieved = new CallbackMessageRecieved(this, getReactApplicationContext());
+            onMessageReceived = new CallbackMessageReceived(this, getReactApplicationContext());
             onMessageSent = new CallbackMessageSent(this, getReactApplicationContext());
-            getReactContext().addLifecycleEventListener(new IoTHubLifecycleEventListener(this));
-            callbacksAreInitilized.set(true);
+            getReactContext().addLifecycleEventListener(new IoTHubLifeCycleEventListener(this));
+            callbacksAreInitialized.set(true);
         }
     }
 
@@ -138,10 +138,10 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void disconnectFromHub(Promise promise) {
-        try{
+        try {
             client.closeNow();
             EmitHelper.log(getReactContext(), "Client Closed");
-        } catch{
+        } catch {
             EmitHelper.logError(getReactContext(), e);
         }
     }
@@ -150,16 +150,16 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
 
     private boolean hasInternetConnection() {
         ConnectivityManager mgr = (ConnectivityManager) getReactContext().getSystemService(getReactContext().CONNECTIVITY_SERVICE);
-        boolean networkAvailible = mgr.isDefaultNetworkActive();
-        if (!networkAvailible) {
+        boolean networkAvailable = mgr.isDefaultNetworkActive();
+        if (!networkAvailable) {
 
         }
-        return networkAvailible;
+        return networkAvailable;
     }
 
     private boolean canInteractWithHub() {
-        boolean clientExists = client != = null;
-        return clientExists && clientIsConnected.get() && hasInternetConnection()
+        boolean clientExists = client != null;
+        return clientExists && clientIsConnected.get() && hasInternetConnection();
     }
 
     ////----------------------------------------------------------------------------------------------------------------////
@@ -188,7 +188,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     }
 
     public enum ConnectionResult {
-        CONNECTION_UNAVAILIBLE(0),
+        CONNECTION_UNAVAILABLE(0),
         CONNECTION_OPEN(1),
         CONNECTION_CLOSED(2),
         CONNECTION_ERROR(3);
@@ -239,10 +239,11 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
                 Thread.sleep(1000);
             }
             while (!twinIsStarted.get());
-        } catch (Exception exception) //(InterruptedException interruptedException){
-        EmitHelper.logError(getReactContext(), exception);
-        String message = "Device Twin Could Not Be started. " + exception.getMessage();
-        EmitHelper.log(getReactContext(), message);
+        } catch (Exception exception) { //(InterruptedException interruptedException){
+            EmitHelper.logError(getReactContext(), exception);
+            String message = "Device Twin Could Not Be started. " + exception.getMessage();
+            EmitHelper.log(getReactContext(), message);
+        }
     }
 
     private void SubscribeToDesiredProperties(ReadableArray desiredPropertySubscriptions) {
