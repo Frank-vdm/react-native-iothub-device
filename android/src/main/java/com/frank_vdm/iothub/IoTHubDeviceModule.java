@@ -189,11 +189,11 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
             String message = "The connection string is Malformed. " + uriSyntaxException.getMessage();
             EmitHelper.log(getReactContext(), message);
             return null;
-        } catch (IOException ioException) {
-            EmitHelper.logError(getReactContext(), ioException);
-            String message = "Error Connecting to the hub. " + ioException.getMessage();
-            EmitHelper.log(getReactContext(), message);
-            return null;
+//        } catch (IOException ioException) {
+//            EmitHelper.logError(getReactContext(), ioException);
+//            String message = "Error Connecting to the hub. " + ioException.getMessage();
+//            EmitHelper.log(getReactContext(), message);
+//            return null;
         }
     }
 
@@ -225,7 +225,6 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
                 EmitHelper.log(getReactContext(), message);
                 return ConnectionResult.CONNECTION_ERROR;
             }
-            return ConnectionResult.CONNECTION_OPEN;
         } else {
             EmitHelper.log(getReactContext(), "No Network Connection");
             return ConnectionResult.CONNECTION_UNAVAILABLE;
