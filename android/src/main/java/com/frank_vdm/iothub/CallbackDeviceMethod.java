@@ -68,14 +68,14 @@ public class CallbackDeviceMethod implements com.microsoft.azure.sdk.iot.device.
 
     private int method_command(Object command) {
         System.out.println("invoking command on this device");
-        emitHelper.log(getReactContext(), "invoking command on this device");
+        EmitHelper.log(module.getReactContext(), "invoking command on this device");
         // Insert code to invoke command here
         return METHOD_SUCCESS;
     }
 
     private int method_default(Object data) {
         System.out.println("invoking default method for this device");
-        emitHelper.log(getReactContext(), "invoking default method for this device");
+        EmitHelper.log(module.getReactContext(), "invoking default method for this device");
         // Insert device specific code here
         return METHOD_NOT_DEFINED;
     }

@@ -72,7 +72,7 @@ public class CallbackMessageSent implements com.microsoft.azure.sdk.iot.device.I
         Message msg = (Message) context;
         //Integer i = context instanceof Integer ? (Integer) context : 0;
         String message = "IoT Hub responded to message " + msg.getMessageId() + " with status " + status.name();
-        Log.d(this.getClass().getSimpleName(), message);
+       // Log.d(this.getClass().getSimpleName(), message);
         EmitHelper.log(module.getReactContext(), message);
 
         String statusJson = status.toString();

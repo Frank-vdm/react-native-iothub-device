@@ -67,9 +67,9 @@ public class CallbackDeviceTwinStatusChange implements com.microsoft.azure.sdk.i
     @Override
     public void execute(IotHubStatusCode status, Object context) {
         if ((status == IotHubStatusCode.OK) || (status == IotHubStatusCode.OK_EMPTY)) {
-            Succeed.set(true);
+            IoTHubDeviceModule.twinIsStarted.set(true);
         } else {
-            Succeed.set(false);
+            IoTHubDeviceModule.twinIsStarted.set(false);
         }
         Log.d(this.getClass().getSimpleName(), "onDeviceTwinStatusCallback: " + status);
         WritableMap params = Arguments.createMap();
