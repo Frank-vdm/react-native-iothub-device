@@ -14,6 +14,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
+
 public class EmitHelper {
 
     public static void emit(ReactContext reactContext,
@@ -48,19 +50,18 @@ public class EmitHelper {
     public static void logError(ReactContext reactContext,
                                 Exception exception) {
 
+
+        String lineNumber = exception.getStackTrace() != null ? Integer.toString(exception.getStackTrace()[0].getLineNumber()) : "unknown line";
+        String rootCause = ExceptionUtils.getRootCauseMessage(exception);
+        String stackTrace = ExceptionUtils.getStackTrace(exception);
+
         WritableMap params = Arguments.createMap();
         params.putString("exception", exception.toString());
+        params.putString("stackTrace", stackTrace);
         params.putString("message", exception.getMessage());
+        params.putString("rootCause", rootCause);
+        params.putString("line", lineNumber);
         params.putString("timeStamp", getTimeStamp());
-        params.putString("cause", exception.getCause() != null ? exception.getCause().toString() : "unknown cause");
-        params.putString("line", exception.getStackTrace() != null ? Integer.toString(exception.getStackTrace()[0].getLineNumber()): "unknown line");
-//        try {
-//            params.putString("line", exception.getStackTrace()[0].getLineNumber())
-//            //params.putString("cause", exception.getCause().toString());
-//        } catch (Exception e) {
-//            EmitHelper.log(reactContext, "Something went wrong logging error: " + e.getMessage());
-//            //Nothing
-//        }
 
         reactContext
                 .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
