@@ -112,7 +112,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
 
     private void InitCallbacks() {
         if (!callbacksAreInitialized.get()) {
-            EmitHelper.log(getReactContext(), "Initiate Callbacks");
+            EmitHelper.log(getReactApplicationContext(), "Initiate Callbacks");
             onConnectionChange = new CallbackConnectionChange(this, getReactApplicationContext());
             onDesiredPropertyUpdate = new CallbackDesiredPropertyUpdate(this, getReactApplicationContext());
             onDeviceMethodCall = new CallbackDeviceMethod(this, getReactApplicationContext());
@@ -121,7 +121,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
             onDeviceTwinStatusChange = new CallbackDeviceTwinStatusChange(this, getReactApplicationContext());
             onMessageReceived = new CallbackMessageReceived(this, getReactApplicationContext());
             onMessageSent = new CallbackMessageSent(this, getReactApplicationContext());
-            getReactContext().addLifecycleEventListener(new IoTHubLifecycleEventListener(this));
+            getReactApplicationContext().addLifecycleEventListener(new IoTHubLifecycleEventListener(this));
             callbacksAreInitialized.set(true);
         }
     }
