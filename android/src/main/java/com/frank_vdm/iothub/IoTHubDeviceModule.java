@@ -188,6 +188,10 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     }
 
     public static AtomicBoolean clientIsConnected = new AtomicBoolean(false);
+    public static AtomicBoolean registerConnectionStatusChangeCallbackIsRegistered = new AtomicBoolean(false);
+    public static AtomicBoolean clientIsConnected = new AtomicBoolean(false);
+    public static AtomicBoolean clientIsConnected = new AtomicBoolean(false);
+    public static AtomicBoolean clientIsConnected = new AtomicBoolean(false);
 
     private boolean hasInternetConnection() {
         ConnectivityManager mgr = (ConnectivityManager) getReactContext().getSystemService(getReactContext().CONNECTIVITY_SERVICE);

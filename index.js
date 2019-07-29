@@ -57,7 +57,7 @@ export async function connectToHub(connectionString, desiredPropertySubscription
     });
 
     onDebugListener = new NativeEventEmitter(IoTHubDeviceModule).addListener('debug', (event) => {
-        console.log("IOT Native ModuleDEBUG LOG:", event.message + " @ " + event.timeStamp);
+        console.log("IOT Native Module DEBUG LOG:", event);
     });
 
     onErrorListener = new NativeEventEmitter(IoTHubDeviceModule).addListener('error', (event) => {
@@ -68,7 +68,7 @@ export async function connectToHub(connectionString, desiredPropertySubscription
 
 export async function disconnectFromHub() {
 
-    let disconnectResult =  await IoTHubDeviceModule.disconnectFromHub();
+    let disconnectResult = await IoTHubDeviceModule.disconnectFromHub();
     onDesiredPropertyUpdateListener.remove();
     onDeviceTwinPropertyRetrievedListener.remove();
     onDeviceTwinStatusCallbackListener.remove();
