@@ -143,8 +143,12 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void disconnectFromHub(Promise promise) {
         try {
-            client.closeNow();
-            EmitHelper.log(getReactContext(), "Client Closed");
+            if (client != null) {
+                client.closeNow();
+                EmitHelper.log(getReactContext(), "Client Closed");
+            } else {
+                EmitHelper.log(getReactContext(), "Client is NUll");
+            }
         } catch (Exception e) {
             EmitHelper.logError(getReactContext(), e);
         }
@@ -176,14 +180,14 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
 
     private DeviceClient CreateIotHubClient(String connectionString, ReadableArray desiredPropertySubscriptions) throws URISyntaxException {
         try {
-            DeviceClient client = new DeviceClient(connectionString, protocol);
-            client.registerConnectionStatusChangeCallback(onConnectionChange, new Object());
+            DeviceClient newClient = new DeviceClient(connectionString, protocol);
+            newClient.registerConnectionStatusChangeCallback(onConnectionChange, new Object());
 
-            ConnectionResult result = ConnectClient();
+            ConnectionResult result = ConnectClient(newClient);
             if (result == ConnectionResult.CONNECTION_OPEN) {
                 SubscribeCallbacks(desiredPropertySubscriptions);
             }
-            return client;
+            return newClient;
         } catch (URISyntaxException uriSyntaxException) {
             EmitHelper.logError(getReactContext(), uriSyntaxException);
             String message = "The connection string is Malformed. " + uriSyntaxException.getMessage();
@@ -214,10 +218,10 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
         }
     }
 
-    private ConnectionResult ConnectClient() {
+    private ConnectionResult ConnectClient(DeviceClient newClient) {
         if (hasInternetConnection()) {
             try {
-                client.open();
+                newClient.open();
                 return ConnectionResult.CONNECTION_OPEN;
             } catch (IOException ioException) {
                 EmitHelper.logError(getReactContext(), ioException);
