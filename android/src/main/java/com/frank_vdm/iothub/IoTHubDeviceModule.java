@@ -185,7 +185,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
 
             ConnectionResult result = ConnectClient(newClient);
             if (result == ConnectionResult.CONNECTION_OPEN) {
-                SubscribeCallbacks(desiredPropertySubscriptions);
+                SubscribeCallbacks(newClient, desiredPropertySubscriptions);
             }
             return newClient;
         } catch (URISyntaxException uriSyntaxException) {
@@ -252,18 +252,18 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
         }
     }
 
-    private void SubscribeCallbacks(ReadableArray desiredPropertySubscriptions) {
-        client.setMessageCallback(onMessageReceived, null);
-        // client.subscribeToDeviceMethod(onDeviceMethodCall, null, onDeviceMehtodstatus, null);
-        // StartDeviceTwin();
-        // SubscribeToDesiredProperties(desiredPropertySubscriptions);
+    private void SubscribeCallbacks(DeviceClient newClient, ReadableArray desiredPropertySubscriptions) {
+        newClient.setMessageCallback(onMessageReceived, null);
+        // newClient.subscribeToDeviceMethod(onDeviceMethodCall, null, onDeviceMehtodstatus, null);
+        // StartDeviceTwin(newClient);
+        // SubscribeToDesiredProperties(newClient, desiredPropertySubscriptions);
     }
 
     public static AtomicBoolean twinIsStarted = new AtomicBoolean(false);
 
-    private void StartDeviceTwin() throws IOException {
+    private void StartDeviceTwin(DeviceClient newClient) throws IOException {
         twinIsStarted.set(false);
-        client.startDeviceTwin(onDeviceTwinStatusChange, null, onDeviceTwinPropertyRetrieved, null);
+        newClient.startDeviceTwin(onDeviceTwinStatusChange, null, onDeviceTwinPropertyRetrieved, null);
         try {
             do {
                 Thread.sleep(1000);
@@ -276,10 +276,10 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
         }
     }
 
-    private void SubscribeToDesiredProperties(ReadableArray desiredPropertySubscriptions) throws IOException {
+    private void SubscribeToDesiredProperties(DeviceClient newClient, ReadableArray desiredPropertySubscriptions) throws IOException {
         Map<Property, Pair<TwinPropertyCallBack, Object>> subscriptions = CreateSubscriptions(desiredPropertySubscriptions);
         if (!subscriptions.isEmpty()) {
-            client.subscribeToTwinDesiredProperties(subscriptions);
+            newClient.subscribeToTwinDesiredProperties(subscriptions);
         }
     }
 
