@@ -27,7 +27,7 @@ public class EmitHelper {
                            String message) {
         WritableMap params = Arguments.createMap();
         params.putString("message", message);
-        params.putString("TimeStamp", getTimeStamp());
+        params.putString("timeStamp", getTimeStamp());
         reactContext
                 .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
                 .emit("log", params);
@@ -37,7 +37,7 @@ public class EmitHelper {
                              String message) {
         WritableMap params = Arguments.createMap();
         params.putString("message", message);
-        params.putString("TimeStamp", getTimeStamp());
+        params.putString("timeStamp", getTimeStamp());
         reactContext
                 .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
                 .emit("debug", params);
@@ -49,7 +49,7 @@ public class EmitHelper {
         WritableMap params = Arguments.createMap();
         params.putString("exception", exception.toString());
         params.putString("message", exception.getMessage());
-        params.putString("TimeStamp", getTimeStamp());
+        params.putString("timeStamp", getTimeStamp());
         try {
             params.putString("cause", exception.getCause().toString());
         } catch (Exception e) {
