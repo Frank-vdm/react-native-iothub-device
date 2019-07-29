@@ -52,8 +52,8 @@ public class EmitHelper {
         params.putString("exception", exception.toString());
         params.putString("message", exception.getMessage());
         params.putString("timeStamp", getTimeStamp());
-        params.putString("cause", exception.getCause() != null ? exception.getCause().toString() : "unknown");
-        params.putString("line", exception.getStackTrace() != null ? exception.getStackTrace()[0].getLineNumber().toString() : "unknwn line");
+        params.putString("cause", exception.getCause() != null ? exception.getCause().toString() : "unknown cause");
+        params.putString("line", exception.getStackTrace() != null ? Integer.toString(exception.getStackTrace()[0].getLineNumber()): "unknown line");
 //        try {
 //            params.putString("line", exception.getStackTrace()[0].getLineNumber())
 //            //params.putString("cause", exception.getCause().toString());
