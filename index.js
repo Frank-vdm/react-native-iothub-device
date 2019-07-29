@@ -69,14 +69,14 @@ export async function connectToHub(connectionString, desiredPropertySubscription
 export async function disconnectFromHub() {
 
     let disconnectResult = await IoTHubDeviceModule.disconnectFromHub();
-    onDesiredPropertyUpdateListener.remove();
-    onDeviceTwinPropertyRetrievedListener.remove();
-    onDeviceTwinStatusCallbackListener.remove();
-    onMessageReceivedListener.remove();
-    onEventCallbackListener.remove();
-    onLogListener.remove();
-    onDebugListener.remove();
-    onConnectionStatusChangeListener.remove();
+    // onDesiredPropertyUpdateListener.remove();
+    // onDeviceTwinPropertyRetrievedListener.remove();
+    // onDeviceTwinStatusCallbackListener.remove();
+    // onMessageReceivedListener.remove();
+    // onEventCallbackListener.remove();
+    // onLogListener.remove();
+    // onDebugListener.remove();
+    // onConnectionStatusChangeListener.remove();
     return disconnectResult;
 }
 

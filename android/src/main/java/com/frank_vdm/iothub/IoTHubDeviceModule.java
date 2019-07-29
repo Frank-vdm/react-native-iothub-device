@@ -167,7 +167,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
                         }
                     }
                 }.start();
-                
+
             } else {
                 EmitHelper.log(getReactContext(), "Client is NUll");
             }
