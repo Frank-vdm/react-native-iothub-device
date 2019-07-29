@@ -6,6 +6,7 @@ import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
@@ -46,16 +47,20 @@ public class EmitHelper {
 
     public static void logError(ReactContext reactContext,
                                 Exception exception) {
+
         WritableMap params = Arguments.createMap();
         params.putString("exception", exception.toString());
         params.putString("message", exception.getMessage());
         params.putString("timeStamp", getTimeStamp());
-        try {
-            params.putString("cause", exception.getCause().toString());
-        } catch (Exception e) {
-            EmitHelper.log(reactContext, "SomethignWent Wrong Logging error: " + e.getMessage());
-            //Nothing
-        }
+        params.putString("cause", exception.getCause() != null ? exception.getCause().toString() : "unknown");
+        params.putString("line", exception.getStackTrace() != null ? exception.getStackTrace()[0].getLineNumber() : "unknwn line");
+//        try {
+//            params.putString("line", exception.getStackTrace()[0].getLineNumber())
+//            //params.putString("cause", exception.getCause().toString());
+//        } catch (Exception e) {
+//            EmitHelper.log(reactContext, "Something went wrong logging error: " + e.getMessage());
+//            //Nothing
+//        }
 
         reactContext
                 .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)

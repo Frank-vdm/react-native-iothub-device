@@ -140,6 +140,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
                 promise.resolve("Success");
             } catch (Exception e) {
                 String temp = ExceptionUtils.getRootCauseMessage(e);
+
                 EmitHelper.log(getReactContext(), temp);
                 EmitHelper.logError(getReactContext(), e);
                 promise.reject(this.getClass().getSimpleName(), e);
