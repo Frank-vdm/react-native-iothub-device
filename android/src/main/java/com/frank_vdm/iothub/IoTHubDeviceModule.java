@@ -153,28 +153,21 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
         try {
             EmitHelper.log(getReactContext(), "started disconnect from hub");
             if (client != null) {
-                new Thread()
-                {
+                new Thread() {
                     public void run() {
-                        try{
+                        try {
                             DeviceClient clientToClose = client;
                             client = null;
                             clientIsConnected.set(false);
                             clientToClose.closeNow();
                             EmitHelper.log(getReactContext(), "Client Closed");
-                        } catch (IOException ioException){
+                        } catch (IOException ioException) {
                             EmitHelper.logError(getReactContext(), ioException);
 //                            promise.reject(this.getClass().getSimpleName(), ioException);
                         }
                     }
                 }.start();
-
-//                DeviceClient ClientToClose = client;
-//                client = null;
-//                clientIsConnected.set(false);
-//                clientToClose.closeNow();
-//                EmitHelper.log(getReactContext(), "Client Closed");
-
+                
             } else {
                 EmitHelper.log(getReactContext(), "Client is NUll");
             }
@@ -187,10 +180,6 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
 
     }
 
-    public static AtomicBoolean clientIsConnected = new AtomicBoolean(false);
-    public static AtomicBoolean registerConnectionStatusChangeCallbackIsRegistered = new AtomicBoolean(false);
-    public static AtomicBoolean clientIsConnected = new AtomicBoolean(false);
-    public static AtomicBoolean clientIsConnected = new AtomicBoolean(false);
     public static AtomicBoolean clientIsConnected = new AtomicBoolean(false);
 
     private boolean hasInternetConnection() {
