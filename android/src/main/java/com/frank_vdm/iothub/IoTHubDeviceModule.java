@@ -156,7 +156,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
                 {
                     public void run() {
                         try{
-                            DeviceClient ClientToClose = client;
+                            DeviceClient clientToClose = client;
                             client = null;
                             clientIsConnected.set(false);
                             clientToClose.closeNow();
