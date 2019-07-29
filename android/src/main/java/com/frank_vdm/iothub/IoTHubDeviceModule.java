@@ -129,13 +129,13 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
             try {
                 if (client == null) {
                     client = CreateIotHubClient(connectionString, desiredPropertySubscriptions);
-                    EmitHelper.log(getReactContext(), "Client Created");
+                    EmitHelper.log(getReactContext(), "Client Created" + getTimeStamp());
 
                 } else {
                     ConnectClient();
                     EmitHelper.log(getReactContext(), "Client Connected");
                 }
-                promise.resolve("Success");
+                promise.resolve("Success" + getTimeStamp());
             } catch (Exception e) {
                 String temp = ExceptionUtils.getRootCauseMessage(e);
                 EmitHelper.log(getReactContext(), temp);
