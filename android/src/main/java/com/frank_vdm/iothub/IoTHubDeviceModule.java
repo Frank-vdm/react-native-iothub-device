@@ -107,10 +107,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
         }
     }
 
-    private String getTimeStamp() {
-        String timeStamp = new SimpleDateFormat("HH:mm.ss").format(Calendar.getInstance().getTime());
-        return timeStamp;
-    }
+
 
     private static AtomicBoolean callbacksAreInitialized = new AtomicBoolean(false);
 
@@ -135,13 +132,11 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
             try {
                 if (client == null) {
                     client = CreateIotHubClient(connectionString, desiredPropertySubscriptions);
-                    EmitHelper.log(getReactContext(), "Client Created" + getTimeStamp());
-
+                    EmitHelper.log(getReactContext(), "Client Created");
                 } else {
                     ConnectClient();
                     EmitHelper.log(getReactContext(), "Client Connected");
                 }
-                EmitHelper.log(getReactContext(), "Client creation, connection completed" + getTimeStamp());
                 promise.resolve("Success");
             } catch (Exception e) {
                 String temp = ExceptionUtils.getRootCauseMessage(e);
@@ -155,15 +150,20 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void disconnectFromHub(Promise promise) {
         try {
+            EmitHelper.log(getReactContext(), "started disconnect from hub");
             if (client != null) {
                 client.closeNow();
                 EmitHelper.log(getReactContext(), "Client Closed");
             } else {
                 EmitHelper.log(getReactContext(), "Client is NUll");
             }
+            EmitHelper.log(getReactContext(), "finished disconnect from hub");
+            promise.resolve("Success");
         } catch (Exception e) {
             EmitHelper.logError(getReactContext(), e);
+            promise.reject(this.getClass().getSimpleName(), e);
         }
+
     }
 
     public static AtomicBoolean clientIsConnected = new AtomicBoolean(false);
@@ -192,16 +192,16 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
 
     private DeviceClient CreateIotHubClient(String connectionString, ReadableArray desiredPropertySubscriptions) throws URISyntaxException {
         try {
-            EmitHelper.log(getReactContext(), "Creating Hub Client" + getTimeStamp());
+            EmitHelper.log(getReactContext(), "Creating Hub Client");
             DeviceClient newClient = new DeviceClient(connectionString, protocol);
 
-            EmitHelper.log(getReactContext(), "register Connection Status Change Callback" + getTimeStamp());
+            EmitHelper.log(getReactContext(), "register Connection Status Change Callback");
             newClient.registerConnectionStatusChangeCallback(onConnectionChange, new Object());
 
-            EmitHelper.log(getReactContext(), "Connect Client" + getTimeStamp());
+            EmitHelper.log(getReactContext(), "Connect Client");
             ConnectionResult result = ConnectClient(newClient);
             if (result == ConnectionResult.CONNECTION_OPEN) {
-                EmitHelper.log(getReactContext(), "Subscribe Callbacks" + getTimeStamp());
+                EmitHelper.log(getReactContext(), "Subscribe Callbacks");
                 SubscribeCallbacks(newClient, desiredPropertySubscriptions);
             }
             return newClient;
