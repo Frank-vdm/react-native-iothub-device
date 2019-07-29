@@ -101,6 +101,11 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
         }
     }
 
+    private String getTimeStamp() {
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
+        return timeStamp;
+    }
+
     private static AtomicBoolean callbacksAreInitialized = new AtomicBoolean(false);
 
     private void InitCallbacks() {
@@ -180,11 +185,16 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
 
     private DeviceClient CreateIotHubClient(String connectionString, ReadableArray desiredPropertySubscriptions) throws URISyntaxException {
         try {
+            EmitHelper.log(getReactContext(), "Creating Hub Client" + getTimeStamp());
             DeviceClient newClient = new DeviceClient(connectionString, protocol);
+
+            EmitHelper.log(getReactContext(), "register Connection Status Change Callback" + getTimeStamp());
             newClient.registerConnectionStatusChangeCallback(onConnectionChange, new Object());
 
+            EmitHelper.log(getReactContext(), "Connect Client" + getTimeStamp());
             ConnectionResult result = ConnectClient(newClient);
             if (result == ConnectionResult.CONNECTION_OPEN) {
+                EmitHelper.log(getReactContext(), "Subscribe Callbacks" + getTimeStamp());
                 SubscribeCallbacks(newClient, desiredPropertySubscriptions);
             }
             return newClient;

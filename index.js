@@ -4,6 +4,7 @@ export const {IoTHubDeviceModule} = NativeModules;
 
 
 export async function connectToHub(connectionString, desiredPropertySubscriptions, onConnectionStatusChange, onDeviceTwinPropertyRetrieved, onMessageReceived, onDeviceTwinStatusCallback, onEventCallback, shouldRetry = true) {
+   console.log("Start Setting Up the IotHub");
     new NativeEventEmitter(IoTHubDeviceModule).addListener('onDesiredPropertyUpdate', (event) => {
         if (event.propertyJson) {
             const property = JSON.parse(event.propertyJson);
@@ -54,7 +55,7 @@ export async function connectToHub(connectionString, desiredPropertySubscription
     new NativeEventEmitter(IoTHubDeviceModule).addListener('error', (event) => {
         console.log("IOT HUB INTERNAL ERROR:", event);
     });
-    
+    console.log("Finish Setting Up the IotHub");
     return await IoTHubDeviceModule.connectToHub(connectionString, desiredPropertySubscriptions);
 }
 
