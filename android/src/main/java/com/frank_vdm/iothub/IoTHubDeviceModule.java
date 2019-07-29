@@ -235,6 +235,23 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
         }
     }
 
+    private ConnectionResult ConnectClient() {
+        if (hasInternetConnection()) {
+            try {
+                client.open();
+                return ConnectionResult.CONNECTION_OPEN;
+            } catch (IOException ioException) {
+                EmitHelper.logError(getReactContext(), ioException);
+                String message = "There was a problem connecting to the IOT Hub. " + ioException.getMessage();
+                EmitHelper.log(getReactContext(), message);
+                return ConnectionResult.CONNECTION_ERROR;
+            }
+        } else {
+            EmitHelper.log(getReactContext(), "No Network Connection");
+            return ConnectionResult.CONNECTION_UNAVAILABLE;
+        }
+    }
+
     private void SubscribeCallbacks(ReadableArray desiredPropertySubscriptions) {
         client.setMessageCallback(onMessageReceived, null);
         // client.subscribeToDeviceMethod(onDeviceMethodCall, null, onDeviceMehtodstatus, null);
