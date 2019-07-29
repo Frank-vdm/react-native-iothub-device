@@ -112,7 +112,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
 
     private void InitCallbacks() {
         if (!callbacksAreInitialized.get()) {
-            EmitHelper.log(getReactContext(), 'Initiate Callbacks');
+            EmitHelper.log(getReactContext(), "Initiate Callbacks");
             onConnectionChange = new CallbackConnectionChange(this, getReactApplicationContext());
             onDesiredPropertyUpdate = new CallbackDesiredPropertyUpdate(this, getReactApplicationContext());
             onDeviceMethodCall = new CallbackDeviceMethod(this, getReactApplicationContext());
