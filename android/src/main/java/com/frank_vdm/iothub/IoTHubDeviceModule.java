@@ -161,9 +161,9 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
                             clientIsConnected.set(false);
                             clientToClose.closeNow();
                             EmitHelper.log(getReactContext(), "Client Closed");
-                        }catch (IOException ioException){
+                        } catch (IOException ioException){
                             EmitHelper.logError(getReactContext(), ioException);
-                            promise.reject(this.getClass().getSimpleName(), ioException);
+//                            promise.reject(this.getClass().getSimpleName(), ioException);
                         }
                     }
                 }.start();
