@@ -108,7 +108,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     }
 
     private String getTimeStamp() {
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
+        String timeStamp = new SimpleDateFormat("HH:mm.ss").format(Calendar.getInstance().getTime());
         return timeStamp;
     }
 
@@ -141,7 +141,8 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
                     ConnectClient();
                     EmitHelper.log(getReactContext(), "Client Connected");
                 }
-                promise.resolve("Success" + getTimeStamp());
+                EmitHelper.log(getReactContext(), "Client creation, connection completed" + getTimeStamp());
+                promise.resolve("Success");
             } catch (Exception e) {
                 String temp = ExceptionUtils.getRootCauseMessage(e);
                 EmitHelper.log(getReactContext(), temp);
