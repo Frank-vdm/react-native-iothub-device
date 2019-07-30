@@ -87,7 +87,7 @@ public class CallbackConnectionChange implements com.microsoft.azure.sdk.iot.dev
             EmitHelper.emit(module.getReactContext(), "onConnectionStatusChange", params);
         } else if (status == IotHubConnectionStatus.DISCONNECTED_RETRYING) {
             EmitHelper.emit(module.getReactContext(), "onConnectionStatusChange", params);
-            EmitHelper.log(getReactContext(), "manually breaking connection and reconnecting");
+            EmitHelper.log(module.getReactContext(), "manually breaking connection and reconnecting");
             module.ReconnectToHub();
             //connection was lost, but is being re-established. Can still send messages, but they won't
             // be sent until the connection is re-established
