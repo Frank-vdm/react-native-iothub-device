@@ -240,7 +240,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
                         EmitHelper.logError(getReactContext(), e);
                     }
                 }
-            }
+            }.start();
         }
     }
 
