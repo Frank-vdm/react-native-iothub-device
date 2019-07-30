@@ -116,21 +116,21 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     private static AtomicBoolean callbacksAreInitialized = new AtomicBoolean(false);
 
     private void InitCallbacks() {
-        String message = !callbacksAreInitialized.get() ? " callbacks are not initialized" : "callbacks are initialized";
-        EmitHelper.log(getReactContext(), message);
-        if (!callbacksAreInitialized.get()) {
-            EmitHelper.log(getReactContext(), "initializing Callbacks");
-            onConnectionChange = new CallbackConnectionChange(this, getReactContext());
-            onDesiredPropertyUpdate = new CallbackDesiredPropertyUpdate(this, getReactContext());
-            onDeviceMethodCall = new CallbackDeviceMethod(this, getReactContext());
-            onDeviceMethodStatus = new CallbackDeviceMethodStatus(this, getReactContext());
-            onDeviceTwinPropertyRetrieved = new CallbackDeviceTwinPropertyRetrieved(this, getReactContext());
-            onDeviceTwinStatusChange = new CallbackDeviceTwinStatusChange(this, getReactContext());
-            onMessageReceived = new CallbackMessageReceived(this, getReactContext());
-            onMessageSent = new CallbackMessageSent(this, getReactContext());
-            getReactContext().addLifecycleEventListener(new IoTHubLifecycleEventListener(this));
-            callbacksAreInitialized.set(true);
-        }
+        //String message = !callbacksAreInitialized.get() ? " callbacks are not initialized" : "callbacks are initialized";
+        //EmitHelper.log(getReactContext(), message);
+        // if (!callbacksAreInitialized.get()) {
+        EmitHelper.log(getReactContext(), "initializing Callbacks");
+        onConnectionChange = new CallbackConnectionChange(this, getReactContext());
+        onDesiredPropertyUpdate = new CallbackDesiredPropertyUpdate(this, getReactContext());
+        onDeviceMethodCall = new CallbackDeviceMethod(this, getReactContext());
+        onDeviceMethodStatus = new CallbackDeviceMethodStatus(this, getReactContext());
+        onDeviceTwinPropertyRetrieved = new CallbackDeviceTwinPropertyRetrieved(this, getReactContext());
+        onDeviceTwinStatusChange = new CallbackDeviceTwinStatusChange(this, getReactContext());
+        onMessageReceived = new CallbackMessageReceived(this, getReactContext());
+        onMessageSent = new CallbackMessageSent(this, getReactContext());
+        getReactContext().addLifecycleEventListener(new IoTHubLifecycleEventListener(this));
+        //  callbacksAreInitialized.set(true);
+        // }
     }
 
     @ReactMethod
@@ -138,7 +138,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
         InitCallbacks();
         if (client != null) {
             client = null;
-        };
+        }
 
         if (hasInternetConnection()) {
             EmitHelper.log(getReactContext(), "internet connection exists, attempting to connect to iot hub");
