@@ -20,9 +20,9 @@ public class IoTHubLifecycleEventListener implements LifecycleEventListener {
     public void onHostResume() {
         //Log.i(this.getClass().getSimpleName(), "onHostResume");
         EmitHelper.log(_client.getReactContext(), "onHostResume");
-        if (!_client.clientIsConnected.get()) {
-            _client.ReconnectToHub();
-        }
+//        if (!_client.clientIsConnected.get()) {
+//            _client.ReconnectToHub();
+//        }
     }
 
     @Override
