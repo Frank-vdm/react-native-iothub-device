@@ -2,32 +2,21 @@ import {NativeEventEmitter, NativeModules} from 'react-native';
 
 export const {IoTHubDeviceModule} = NativeModules;
 
-let onDesiredPropertyUpdateListener;
-let onConnectionStatusChangeListener;
-let onDeviceTwinPropertyRetrievedListener;
-let onDeviceTwinStatusCallbackListener;
-let onMessageReceivedListener;
-let onEventCallbackListener;
-let onLogListener;
-let onDebugListener;
-let onErrorListener;
+export async function initialize(onConnectionStatusChange, onDeviceTwinPropertyRetrieved, onMessageReceived, onDeviceTwinStatusCallback, onEventCallback) {
 
-export async function connectToHub(connectionString, desiredPropertySubscriptions, onConnectionStatusChange, onDeviceTwinPropertyRetrieved, onMessageReceived, onDeviceTwinStatusCallback, onEventCallback, shouldRetry = true) {
-    onDesiredPropertyUpdateListener = new NativeEventEmitter(IoTHubDeviceModule).addListener('onDesiredPropertyUpdate', (event) => {
+    new NativeEventEmitter(IoTHubDeviceModule).addListener('onConnectionStatusChange', (event) => onConnectionStatusChange(event));
+
+    new NativeEventEmitter(IoTHubDeviceModule).addListener('onDesiredPropertyUpdate', (event) => {
         if (event.propertyJson) {
             const property = JSON.parse(event.propertyJson);
             onDesiredPropertyUpdate(property.property);
         }
     });
 
-    onConnectionStatusChangeListener = new NativeEventEmitter(IoTHubDeviceModule).addListener('onConnectionStatusChange', (event) => {
-        onConnectionStatusChange(event);
-    });
-
     /**
      * All properties retrieved when first connected, and retrieved when an update is made remotely.
      */
-    onDeviceTwinPropertyRetrievedListener = new NativeEventEmitter(IoTHubDeviceModule).addListener('onDeviceTwinPropertyRetrieved', (event) => {
+    new NativeEventEmitter(IoTHubDeviceModule).addListener('onDeviceTwinPropertyRetrieved', (event) => {
         if (event && event.propertyJson) {
             try {
                 onDeviceTwinPropertyRetrieved(JSON.parse(event.propertyJson));
@@ -40,44 +29,41 @@ export async function connectToHub(connectionString, desiredPropertySubscription
     /**
      * When device operations are invoked from this device, IoT Hub will send response messages.
      */
-    onDeviceTwinStatusCallbackListener = new NativeEventEmitter(IoTHubDeviceModule).addListener('onDeviceTwinStatusCallback', (event) => {
+    new NativeEventEmitter(IoTHubDeviceModule).addListener('onDeviceTwinStatusCallback', (event) => {
         onDeviceTwinStatusCallback(event);
     });
 
-    onMessageReceivedListener = new NativeEventEmitter(IoTHubDeviceModule).addListener('onMessageReceived', (event) => {
+    new NativeEventEmitter(IoTHubDeviceModule).addListener('onMessageReceived', (event) => {
         onMessageReceived(event);
     });
 
-    onEventCallbackListener = new NativeEventEmitter(IoTHubDeviceModule).addListener('onEventCallback', (event) => {
+    new NativeEventEmitter(IoTHubDeviceModule).addListener('onEventCallback', (event) => {
         onEventCallback(event);
     });
 
-    onLogListener = new NativeEventEmitter(IoTHubDeviceModule).addListener('log', (event) => {
+    new NativeEventEmitter(IoTHubDeviceModule).addListener('log', (event) => {
         console.log("IOT Native Module LOG:", event.message + " @ " + event.timeStamp);
     });
 
-    onDebugListener = new NativeEventEmitter(IoTHubDeviceModule).addListener('debug', (event) => {
+    new NativeEventEmitter(IoTHubDeviceModule).addListener('debug', (event) => {
         console.log("IOT Native Module DEBUG LOG:", event);
     });
 
-    onErrorListener = new NativeEventEmitter(IoTHubDeviceModule).addListener('error', (event) => {
+    new NativeEventEmitter(IoTHubDeviceModule).addListener('error', (event) => {
         console.log("IOT Native Module ERROR:", event);
     });
+
+}
+
+
+export async function connect(connectionString, desiredPropertySubscriptions) {
+
     return await IoTHubDeviceModule.connectToHub(connectionString, desiredPropertySubscriptions);
 }
 
-export async function disconnectFromHub() {
+export async function disconnect() {
 
-    let disconnectResult = await IoTHubDeviceModule.disconnectFromHub();
-    // onDesiredPropertyUpdateListener.remove();
-    // onDeviceTwinPropertyRetrievedListener.remove();
-    // onDeviceTwinStatusCallbackListener.remove();
-    // onMessageReceivedListener.remove();
-    // onEventCallbackListener.remove();
-    // onLogListener.remove();
-    // onDebugListener.remove();
-    // onConnectionStatusChangeListener.remove();
-    return disconnectResult;
+    return await IoTHubDeviceModule.disconnectFromHub();
 }
 
 // export async function requestTwinProperties() {
