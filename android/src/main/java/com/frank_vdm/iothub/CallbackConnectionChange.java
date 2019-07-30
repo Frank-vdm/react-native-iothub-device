@@ -61,7 +61,7 @@ public class CallbackConnectionChange implements com.microsoft.azure.sdk.iot.dev
     private IoTHubDeviceModule module;
     private Gson gson = new Gson();
 
-    public CallbackConnectionChange(IoTHubDeviceModule module, ReactContext context){
+    public CallbackConnectionChange(IoTHubDeviceModule module, ReactContext context) {
         super();
         this.module = module;
         this.reactContext = context;
@@ -73,31 +73,27 @@ public class CallbackConnectionChange implements com.microsoft.azure.sdk.iot.dev
         params.putString("status", status.name());
         params.putString("statusChangeReason", statusChangeReason.name());
 
-        if(throwable != null) {
+        if (throwable != null) {
             params.putString("statusChangeThrowable", throwable.getMessage());
             throwable.printStackTrace();
         }
 
         IoTHubDeviceModule.clientIsConnected.set((status == IotHubConnectionStatus.CONNECTED));
 
-        if (status == IotHubConnectionStatus.DISCONNECTED)
-        {
+        if (status == IotHubConnectionStatus.DISCONNECTED) {
             //connection was lost, and is not being re-established. Look at provided exception for
             // how to resolve this issue. Cannot send messages until this issue is resolved, and you manually
             // re-open the device client
             EmitHelper.emit(module.getReactContext(), "onConnectionStatusChange", params);
-        }
-        else if (status == IotHubConnectionStatus.DISCONNECTED_RETRYING)
-        {
+        } else if (status == IotHubConnectionStatus.DISCONNECTED_RETRYING) {
+            EmitHelper.emit(module.getReactContext(), "onConnectionStatusChange", params);
+            EmitHelper.log(getReactContext(), "manually breaking connection and reconnecting");
+            module.ReconnectToHub();
             //connection was lost, but is being re-established. Can still send messages, but they won't
             // be sent until the connection is re-established
+        } else if (status == IotHubConnectionStatus.CONNECTED) {
             EmitHelper.emit(module.getReactContext(), "onConnectionStatusChange", params);
         }
-        else if (status == IotHubConnectionStatus.CONNECTED)
-        {
-            EmitHelper.emit(module.getReactContext(), "onConnectionStatusChange", params);
-        }
-
 
 
     }
