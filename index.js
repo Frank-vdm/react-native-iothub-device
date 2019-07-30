@@ -53,6 +53,8 @@ export async function initialize(onConnectionStatusChange, onDeviceTwinPropertyR
         console.debug("IOT Native Module ERROR:", event);
     });
 
+    await IoTHubDeviceModule.Initialize();
+
 }
 
 

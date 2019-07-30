@@ -106,6 +106,11 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
         }
     }
 
+    @ReactMethod
+    public void Initialize(Promise promise){
+        callbacksAreInitialized.set(false);
+        disconnectFromHub(promise);
+    }
 
     private static AtomicBoolean callbacksAreInitialized = new AtomicBoolean(false);
 
