@@ -117,7 +117,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
 
     private void InitCallbacks() {
         String message = !callbacksAreInitialized.get() ? " callbacks are not initialized" : "callbacks are initialized";
-        EmitHelper.log(getReactContext(),message);
+        EmitHelper.log(getReactContext(), message);
         if (!callbacksAreInitialized.get()) {
             EmitHelper.log(getReactContext(), "initializing Callbacks");
             onConnectionChange = new CallbackConnectionChange(this, getReactContext());
@@ -152,6 +152,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
 
                 EmitHelper.log(getReactContext(), temp);
                 EmitHelper.logError(getReactContext(), e);
+
                 promise.reject(this.getClass().getSimpleName(), e);
             }
         }
@@ -160,7 +161,6 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void disconnectFromHub(Promise promise) {
         try {
-            EmitHelper.log(getReactContext(), "started disconnect from hub");
             if (client != null) {
                 new Thread() {
                     public void run() {
@@ -180,7 +180,6 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
             } else {
                 EmitHelper.log(getReactContext(), "Client is NUll");
             }
-            EmitHelper.log(getReactContext(), "finished disconnect from hub");
             promise.resolve("Success");
         } catch (Exception e) {
             EmitHelper.logError(getReactContext(), e);

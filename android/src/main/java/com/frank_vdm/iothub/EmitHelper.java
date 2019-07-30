@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
+import java.lang.StackTraceElement;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
@@ -50,17 +51,29 @@ public class EmitHelper {
     public static void logError(ReactContext reactContext,
                                 Exception exception) {
 
-
-        String lineNumber = exception.getStackTrace() != null ? Integer.toString(exception.getStackTrace()[0].getLineNumber()) : "unknown line";
-        String rootCause = ExceptionUtils.getRootCauseMessage(exception);
-        String stackTrace = ExceptionUtils.getStackTrace(exception);
-
         WritableMap params = Arguments.createMap();
+
         params.putString("exception", exception.toString());
-        params.putString("stackTrace", stackTrace);
         params.putString("message", exception.getMessage());
+
+        String rootCause = ExceptionUtils.getRootCauseMessage(exception);
         params.putString("rootCause", rootCause);
-        params.putString("line", lineNumber);
+
+        String stackTrace = ExceptionUtils.getStackTrace(exception);
+        params.putString("stackTrace", stackTrace);
+
+        if(exception.getStackTrace() != null){
+            int fileIndex = exception.getStackTrace().length;
+            StackTraceElement stackTraceItem = Integer.toString(exception.getStackTrace()[fileIndex - 1];
+
+            String lineNumber = stackTraceItem.getLineNumber();
+            String fileName = stackTraceItem.getFileName();
+            String className = stackTraceItem.getClassName();
+            params.putString("line", lineNumber);
+            params.putString("file", fileName);
+            params.putString("class", className);
+        }
+
         params.putString("timeStamp", getTimeStamp());
 
         reactContext
