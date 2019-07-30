@@ -78,7 +78,7 @@ public class CallbackConnectionChange implements com.microsoft.azure.sdk.iot.dev
             throwable.printStackTrace();
         }
 
-        let temp = (status == IotHubConnectionStatus.CONNECTED);
+        boolean temp = (status == IotHubConnectionStatus.CONNECTED);
         EmitHelper.log(module.getReactContext(), "setting clientIsConnected: " + String.valueOf(temp));
         IoTHubDeviceModule.clientIsConnected.set((status == IotHubConnectionStatus.CONNECTED));
 
