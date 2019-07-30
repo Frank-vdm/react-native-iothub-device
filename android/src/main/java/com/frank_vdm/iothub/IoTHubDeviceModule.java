@@ -107,7 +107,8 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void Initialize(Promise promise){
+    public void Initialize(Promise promise) {
+        EmitHelper.log(getReactContext(), "resetting");
         callbacksAreInitialized.set(false);
         disconnectFromHub(promise);
     }
@@ -115,9 +116,10 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     private static AtomicBoolean callbacksAreInitialized = new AtomicBoolean(false);
 
     private void InitCallbacks() {
-        EmitHelper.log(getReactContext(), "will initiate callbacks? " + String.valueOf(!callbacksAreInitialized.get()));
+        String message = !callbacksAreInitialized.get() ? " callbacks are not initialized" : "callbacks are initialized";
+        EmitHelper.log(getReactContext(),message));
         if (!callbacksAreInitialized.get()) {
-            EmitHelper.log(getReactContext(), "Initiate Callbacks");
+            EmitHelper.log(getReactContext(), "initializing Callbacks");
             onConnectionChange = new CallbackConnectionChange(this, getReactContext());
             onDesiredPropertyUpdate = new CallbackDesiredPropertyUpdate(this, getReactContext());
             onDeviceMethodCall = new CallbackDeviceMethod(this, getReactContext());
@@ -135,6 +137,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     public void connectToHub(String connectionString, ReadableArray desiredPropertySubscriptions, Promise promise) {
         InitCallbacks();
         if (hasInternetConnection()) {
+            EmitHelper.log(getReactContext(), "internet connection exists, attempting to connect to iot hub"));
             try {
                 if (client == null) {
                     client = CreateIotHubClient(connectionString, desiredPropertySubscriptions);
