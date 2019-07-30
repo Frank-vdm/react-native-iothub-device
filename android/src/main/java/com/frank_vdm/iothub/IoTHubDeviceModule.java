@@ -117,7 +117,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
 
     private void InitCallbacks() {
         String message = !callbacksAreInitialized.get() ? " callbacks are not initialized" : "callbacks are initialized";
-        EmitHelper.log(getReactContext(),message));
+        EmitHelper.log(getReactContext(),message);
         if (!callbacksAreInitialized.get()) {
             EmitHelper.log(getReactContext(), "initializing Callbacks");
             onConnectionChange = new CallbackConnectionChange(this, getReactContext());
