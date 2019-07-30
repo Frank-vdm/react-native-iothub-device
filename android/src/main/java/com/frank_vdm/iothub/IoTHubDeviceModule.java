@@ -110,6 +110,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     private static AtomicBoolean callbacksAreInitialized = new AtomicBoolean(false);
 
     private void InitCallbacks() {
+        EmitHelper.log(getReactContext(), "will initiate callbacks? " + String.valueOf(!callbacksAreInitialized.get()));
         if (!callbacksAreInitialized.get()) {
             EmitHelper.log(getReactContext(), "Initiate Callbacks");
             onConnectionChange = new CallbackConnectionChange(this, getReactContext());
@@ -252,7 +253,9 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     private ConnectionResult ConnectClient(DeviceClient newClient) {
         if (hasInternetConnection()) {
             try {
+                EmitHelper.log(getReactContext(), "Opening Iot Hub Connection");
                 newClient.open();
+                EmitHelper.log(getReactContext(), "Iot Hub Connection opened");
                 return ConnectionResult.CONNECTION_OPEN;
             } catch (IOException ioException) {
                 EmitHelper.logError(getReactContext(), ioException);
