@@ -221,8 +221,8 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
 
     public void ReconnectToHub() {
         if (iotHubConnectionString != null && iotHubPropertySubscriptions != null && client != null && hasInternetConnection()) {
-            EmitHelper.log(getReactContext(), "will reconnect to iot hub");
             InitCallbacks();
+            EmitHelper.log(getReactContext(), "will reconnect to iot hub");
             new Thread() {
                 public void run() {
                     try {
