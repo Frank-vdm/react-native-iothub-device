@@ -141,16 +141,14 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     public void connectToHub(String connectionString, ReadableArray desiredPropertySubscriptions, Promise promise) {
         iotHubConnectionString = connectionString;
         iotHubPropertySubscriptions = desiredPropertySubscriptions;
-        synchronized (lock) {
-            InitCallbacks();
-            if (client != null) {
-                InternalDisconnect();
-                client = null;
-            }
 
-            if (hasInternetConnection()) {
-                EmitHelper.log(getReactContext(), "internet connection exists, attempting to connect to iot hub");
-                try {
+        InitCallbacks();
+        InternalDisconnect();
+
+        if (hasInternetConnection()) {
+            EmitHelper.log(getReactContext(), "internet connection exists, attempting to connect to iot hub");
+            try {
+                synchronized (lock) {
                     if (client == null) {
                         client = CreateIotHubClient(connectionString, desiredPropertySubscriptions);
                         EmitHelper.log(getReactContext(), "Client Created");
@@ -158,15 +156,15 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
                         ConnectClient();
                         EmitHelper.log(getReactContext(), "Client Connected");
                     }
-                    promise.resolve("Success");
-                } catch (Exception e) {
-                    String temp = ExceptionUtils.getRootCauseMessage(e);
-
-                    EmitHelper.log(getReactContext(), temp);
-                    EmitHelper.logError(getReactContext(), e);
-
-                    promise.reject(this.getClass().getSimpleName(), e);
                 }
+                promise.resolve("Success");
+            } catch (Exception e) {
+                String temp = ExceptionUtils.getRootCauseMessage(e);
+
+                EmitHelper.log(getReactContext(), temp);
+                EmitHelper.logError(getReactContext(), e);
+
+                promise.reject(this.getClass().getSimpleName(), e);
             }
         }
     }
@@ -174,26 +172,30 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void disconnectFromHub(Promise promise) {
         try {
-            if (client != null) {
-                new Thread() {
-                    public void run() {
-                        try {
-                            synchronized (lock) {
+            synchronized (lock) {
+                if (client != null) {
+                    new Thread() {
+                        public void run() {
+                            try {
+
                                 DeviceClient clientToClose = client;
                                 client = null;
                                 clientIsConnected.set(false);
                                 clientToClose.closeNow();
                                 EmitHelper.log(getReactContext(), "Client Closed");
                             }
-                        } catch (IOException ioException) {
+                        } catch(
+                        IOException ioException)
+
+                        {
                             EmitHelper.logError(getReactContext(), ioException);
 //                            promise.reject(this.getClass().getSimpleName(), ioException);
                         }
-                    }
-                }.start();
+                    }.start();
 
-            } else {
-                EmitHelper.log(getReactContext(), "Client is NUll");
+                } else {
+                    EmitHelper.log(getReactContext(), "Client is NUll");
+                }
             }
             promise.resolve("Success");
         } catch (Exception e) {
@@ -220,19 +222,21 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     }
 
     public void ReconnectToHub() {
-        if (iotHubConnectionString != null && iotHubPropertySubscriptions != null && client != null && hasInternetConnection()) {
+        if (iotHubConnectionString != null && iotHubPropertySubscriptions != null && hasInternetConnection()) {
             InitCallbacks();
             EmitHelper.log(getReactContext(), "will reconnect to iot hub");
             new Thread() {
                 public void run() {
                     try {
                         synchronized (lock) {
-                            DeviceClient clientToClose = client;
-                            client = null;
-                            clientIsConnected.set(false);
-                            clientToClose.closeNow();
-                            client = CreateIotHubClient(iotHubConnectionString, iotHubPropertySubscriptions);
-                            EmitHelper.log(getReactContext(), "Client Created");
+                            if (client != null) {
+                                DeviceClient clientToClose = client;
+                                client = null;
+                                clientIsConnected.set(false);
+                                clientToClose.closeNow();
+                                client = CreateIotHubClient(iotHubConnectionString, iotHubPropertySubscriptions);
+                                EmitHelper.log(getReactContext(), "Client Created");
+                            }
                         }
                     } catch (Exception e) {
                         String temp = ExceptionUtils.getRootCauseMessage(e);
@@ -246,26 +250,28 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
 
     public void InternalDisconnect() {
         try {
-            if (client != null) {
-                new Thread() {
-                    public void run() {
-                        try {
-                            synchronized (lock) {
+            new Thread() {
+                public void run() {
+                    try {
+                        synchronized (lock) {
+                            if (client != null) {
                                 DeviceClient clientToClose = client;
                                 client = null;
                                 clientIsConnected.set(false);
                                 clientToClose.closeNow();
                                 EmitHelper.log(getReactContext(), "Client Closed");
                             }
-                        } catch (IOException ioException) {
-                            EmitHelper.logError(getReactContext(), ioException);
+                        } else{
+                            EmitHelper.log(getReactContext(), "Client is NUll");
                         }
+                    } catch (
+                            IOException ioException) {
+                        EmitHelper.logError(getReactContext(), ioException);
                     }
-                }.start();
-            } else {
-                EmitHelper.log(getReactContext(), "Client is NUll");
-            }
-        } catch (Exception e) {
+                }
+            }.start();
+        } catch (
+                Exception e) {
             EmitHelper.logError(getReactContext(), e);
         }
     }
@@ -322,6 +328,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
         public int getValue() {
             return value;
         }
+
     }
 
     private ConnectionResult ConnectClient(DeviceClient newClient) {
