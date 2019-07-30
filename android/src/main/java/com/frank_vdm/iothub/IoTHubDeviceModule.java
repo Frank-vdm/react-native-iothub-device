@@ -137,7 +137,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     public void connectToHub(String connectionString, ReadableArray desiredPropertySubscriptions, Promise promise) {
         InitCallbacks();
         if (hasInternetConnection()) {
-            EmitHelper.log(getReactContext(), "internet connection exists, attempting to connect to iot hub"));
+            EmitHelper.log(getReactContext(), "internet connection exists, attempting to connect to iot hub");
             try {
                 if (client == null) {
                     client = CreateIotHubClient(connectionString, desiredPropertySubscriptions);
