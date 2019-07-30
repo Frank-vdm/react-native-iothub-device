@@ -133,8 +133,14 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
         // }
     }
 
+    private static String iotHubConnectionString = null;
+    private static ReadableArray iotHubPropertySubscriptions = null;
+
     @ReactMethod
     public void connectToHub(String connectionString, ReadableArray desiredPropertySubscriptions, Promise promise) {
+        iotHubConnectionString = connectionString;
+        iotHubPropertySubscriptions = desiredPropertySubscriptions;
+
         InitCallbacks();
         if (client != null) {
             client = null;
@@ -206,6 +212,36 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
     private boolean canInteractWithHub() {
         boolean clientExists = client != null;
         return clientExists && clientIsConnected.get() && hasInternetConnection();
+    }
+
+    public void ReconnectToHub() {
+        if (iotHubConnectionString != null && iotHubPropertySubscriptions != null) {
+            InitCallbacks();
+            if (client != null) {
+                client = null;
+            }
+
+            if (hasInternetConnection()) {
+                EmitHelper.log(getReactContext(), "internet connection exists, attempting to connect to iot hub");
+                try {
+                    if (client == null) {
+                        client = CreateIotHubClient(connectionString, desiredPropertySubscriptions);
+                        EmitHelper.log(getReactContext(), "Client Created");
+                    } else {
+                        ConnectClient();
+                        EmitHelper.log(getReactContext(), "Client Connected");
+                    }
+                    promise.resolve("Success");
+                } catch (Exception e) {
+                    String temp = ExceptionUtils.getRootCauseMessage(e);
+
+                    EmitHelper.log(getReactContext(), temp);
+                    EmitHelper.logError(getReactContext(), e);
+
+                    promise.reject(this.getClass().getSimpleName(), e);
+                }
+            }
+        }
     }
 
     ////----------------------------------------------------------------------------------------------------------------////
