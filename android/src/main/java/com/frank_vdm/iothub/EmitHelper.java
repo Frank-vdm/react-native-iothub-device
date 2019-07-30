@@ -64,7 +64,7 @@ public class EmitHelper {
 
         if(exception.getStackTrace() != null){
             int fileIndex = exception.getStackTrace().length;
-            StackTraceElement stackTraceItem = exception.getStackTrace()[fileIndex - 1];
+            StackTraceElement stackTraceItem = exception.getStackTrace()[fileIndex - 12];
 
             String lineNumber = Integer.toString(stackTraceItem.getLineNumber());
             String fileName = stackTraceItem.getFileName();
