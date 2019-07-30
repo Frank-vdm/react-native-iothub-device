@@ -231,16 +231,36 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
                         ConnectClient();
                         EmitHelper.log(getReactContext(), "Client Connected");
                     }
-                    promise.resolve("Success");
                 } catch (Exception e) {
                     String temp = ExceptionUtils.getRootCauseMessage(e);
-
                     EmitHelper.log(getReactContext(), temp);
                     EmitHelper.logError(getReactContext(), e);
-
-                    promise.reject(this.getClass().getSimpleName(), e);
                 }
             }
+        }
+    }
+
+    public void InternalDisconnect() {
+        try {
+            if (client != null) {
+                new Thread() {
+                    public void run() {
+                        try {
+                            DeviceClient clientToClose = client;
+                            client = null;
+                            clientIsConnected.set(false);
+                            clientToClose.closeNow();
+                            EmitHelper.log(getReactContext(), "Client Closed");
+                        } catch (IOException ioException) {
+                            EmitHelper.logError(getReactContext(), ioException);
+                        }
+                    }
+                }.start();
+            } else {
+                EmitHelper.log(getReactContext(), "Client is NUll");
+            }
+        } catch (Exception e) {
+            EmitHelper.logError(getReactContext(), e);
         }
     }
 
