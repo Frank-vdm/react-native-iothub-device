@@ -255,18 +255,16 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
                                 clientIsConnected.set(false);
                                 clientToClose.closeNow();
                                 EmitHelper.log(getReactContext(), "Client Closed");
+                            } else {
+                                EmitHelper.log(getReactContext(), "Client is NUll");
                             }
-                        } else{
-                            EmitHelper.log(getReactContext(), "Client is NUll");
                         }
-                    } catch (
-                            IOException ioException) {
+                    } catch (IOException ioException) {
                         EmitHelper.logError(getReactContext(), ioException);
                     }
                 }
             }.start();
-        } catch (
-                Exception e) {
+        } catch (Exception e) {
             EmitHelper.logError(getReactContext(), e);
         }
     }
