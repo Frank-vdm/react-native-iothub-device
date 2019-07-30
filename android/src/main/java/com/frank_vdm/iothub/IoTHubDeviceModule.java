@@ -143,6 +143,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
 
         InitCallbacks();
         if (client != null) {
+            InternalDisconnect();
             client = null;
         }
 
@@ -216,8 +217,10 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
 
     public void ReconnectToHub() {
         if (iotHubConnectionString != null && iotHubPropertySubscriptions != null) {
+            EmitHelper.log(getReactContext(), "will reconnect to iot hub");
             InitCallbacks();
             if (client != null) {
+                InternalDisconnect();
                 client = null;
             }
 
@@ -225,7 +228,7 @@ public class IoTHubDeviceModule extends ReactContextBaseJavaModule {
                 EmitHelper.log(getReactContext(), "internet connection exists, attempting to connect to iot hub");
                 try {
                     if (client == null) {
-                        client = CreateIotHubClient(connectionString, desiredPropertySubscriptions);
+                        client = CreateIotHubClient(iotHubConnectionString, iotHubPropertySubscriptions);
                         EmitHelper.log(getReactContext(), "Client Created");
                     } else {
                         ConnectClient();
