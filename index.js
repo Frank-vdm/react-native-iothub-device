@@ -42,15 +42,15 @@ export async function initialize(onConnectionStatusChange, onDeviceTwinPropertyR
     });
 
     new NativeEventEmitter(IoTHubDeviceModule).addListener('log', (event) => {
-        console.log("IOT Native Module LOG:", event.message + " @ " + event.timeStamp);
+        console.debug("IOT Native Module LOG:", event.message + " @ " + event.timeStamp);
     });
 
     new NativeEventEmitter(IoTHubDeviceModule).addListener('debug', (event) => {
-        console.log("IOT Native Module DEBUG LOG:", event);
+        console.debug("IOT Native Module DEBUG LOG:", event);
     });
 
     new NativeEventEmitter(IoTHubDeviceModule).addListener('error', (event) => {
-        console.log("IOT Native Module ERROR:", event);
+        console.debug("IOT Native Module ERROR:", event);
     });
 
 }
